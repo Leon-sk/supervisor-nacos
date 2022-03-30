@@ -1,4 +1,4 @@
-Supervisor is licensed under the following license:
+Supervisor-Nacos is licensed under the following license:
 
   A copyright notice accompanies this license document that identifies
   the copyright holders.
