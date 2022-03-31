@@ -685,6 +685,7 @@ class ServerOptions(Options):
                 env.update(proc.environment)
                 proc.environment = env
         section.server_configs = self.server_configs_from_parser(parser)
+        section.nacos_config = self.nacos_config_from_parser(parser)
         section.profile_options = None
         return section
 
@@ -1150,6 +1151,24 @@ class ServerOptions(Options):
             configs.append(config)
 
         return configs
+    
+    def nacos_config_from_parser(self, parser):
+        config = {}
+        nacos = self._parse_servernames(parser, 'nacos')
+        for name, section in nacos:
+            get = parser.saneget
+            config['name'] = name
+            server_addresses = get(section, 'server_addresses', None)
+            if "server_addresses" in os.environ:
+                server_addresses = os.environ["server_addresses"]
+            config['server_addresses'] = server_addresses
+            config['username'] = get(section, 'username', None)
+            config['password'] = get(section, 'password', None)
+            config['namespace'] = get(section, 'namespace', None)
+            config['section'] = section
+            break
+
+        return config
 
     def daemonize(self):
         self.poller.before_daemonize()
@@ -1274,6 +1293,27 @@ class ServerOptions(Options):
         return self.signal_receiver.get_signal()
 
     def openhttpservers(self, supervisord):
+        try:
+            self.httpservers = self.make_http_servers(supervisord)
+            self.unlink_socketfiles = True
+        except socket.error as why:
+            if why.args[0] == errno.EADDRINUSE:
+                self.usage('Another program is already listening on '
+                           'a port that one of our HTTP servers is '
+                           'configured to use.  Shut this program '
+                           'down first before starting supervisord.')
+            else:
+                help = 'Cannot open an HTTP server: socket.error reported'
+                errorname = errno.errorcode.get(why.args[0])
+                if errorname is None:
+                    self.usage('%s %s' % (help, why.args[0]))
+                else:
+                    self.usage('%s errno.%s (%d)' %
+                               (help, errorname, why.args[0]))
+        except ValueError as why:
+            self.usage(why.args[0])
+    
+    def opennacos(self, supervisord):
         try:
             self.httpservers = self.make_http_servers(supervisord)
             self.unlink_socketfiles = True
