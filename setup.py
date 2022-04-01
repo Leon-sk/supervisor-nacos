@@ -1,16 +1,5 @@
-##############################################################################
-#
-# Copyright (c) 2006-2015 Agendaless Consulting and Contributors.
-# All Rights Reserved.
-#
-# This software is subject to the provisions of the BSD-like license at
-# http://www.repoze.org/LICENSE.txt.  A copy of the license should accompany
-# this distribution.  THIS SOFTWARE IS PROVIDED "AS IS" AND ANY AND ALL
-# EXPRESS OR IMPLIED WARRANTIES ARE DISCLAIMED, INCLUDING, BUT NOT LIMITED TO,
-# THE IMPLIED WARRANTIES OF TITLE, MERCHANTABILITY, AGAINST INFRINGEMENT, AND
-# FITNESS FOR A PARTICULAR PURPOSE
-#
-##############################################################################
+#!/usr/local/bin/env python3
+# -*-  coding:utf-8 -*-
 
 import os
 import sys
@@ -71,15 +60,15 @@ with open(version_txt, 'r') as f:
     supervisor_version = f.read().strip()
 
 dist = setup(
-    name='supervisor',
+    name='supervisor-nacos',
     version=supervisor_version,
     license='BSD-derived (http://www.repoze.org/LICENSE.txt)',
     url='http://supervisord.org/',
     description="A system for controlling process state under UNIX",
     long_description=README + '\n\n' + CHANGES,
     classifiers=CLASSIFIERS,
-    author="Chris McDonough",
-    author_email="chrism@plope.com",
+    author="leon sk",
+    author_email="329413695@qq.com",
     packages=find_packages(),
     install_requires=requires,
     extras_require={

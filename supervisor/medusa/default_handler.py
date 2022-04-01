@@ -1,9 +1,5 @@
-# -*- Mode: Python -*-
-#
-#       Author: Sam Rushing <rushing@nightmare.com>
-#       Copyright 1997 by Sam Rushing
-#                                                All Rights Reserved.
-#
+#!/usr/local/bin/env python3
+# -*-  coding:utf-8 -*-
 
 RCS_ID = '$Id: default_handler.py,v 1.8 2002/08/01 18:15:45 akuchling Exp $'
 
@@ -35,6 +31,7 @@ unquote = http_server.unquote
 #
 
 from supervisor.medusa.counter import counter
+
 
 class default_handler:
 
@@ -77,7 +74,7 @@ class default_handler:
     def handle_request (self, request):
 
         if request.command not in self.valid_commands:
-            request.error (400) # bad request
+            request.error (400)  # bad request
             return
 
         self.hit_counter.increment()
@@ -113,11 +110,11 @@ class default_handler:
                     found = 1
                     break
             if not found:
-                request.error (404) # Not Found
+                request.error (404)  # Not Found
                 return
 
         elif not self.filesystem.isfile (path):
-            request.error (404) # Not Found
+            request.error (404)  # Not Found
             return
 
         file_length = self.filesystem.stat (path)[stat.ST_SIZE]
@@ -181,11 +178,12 @@ class default_handler:
         return producers.simple_producer (
                 '<li>%s' % html_repr (self)
                 + '<ul>'
-                + '  <li><b>Total Hits:</b> %s'                 % self.hit_counter
-                + '  <li><b>Files Delivered:</b> %s'    % self.file_counter
-                + '  <li><b>Cache Hits:</b> %s'                 % self.cache_counter
+                + '  <li><b>Total Hits:</b> %s' % self.hit_counter
+                + '  <li><b>Files Delivered:</b> %s' % self.file_counter
+                + '  <li><b>Cache Hits:</b> %s' % self.cache_counter
                 + '</ul>'
                 )
+
 
 # HTTP/1.0 doesn't say anything about the "; length=nnnn" addition
 # to this header.  I suppose its purpose is to avoid the overhead
@@ -205,10 +203,11 @@ CONTENT_TYPE = re.compile (
 get_header = http_server.get_header
 get_header_match = http_server.get_header_match
 
+
 def get_extension (path):
     dirsep = path.rfind('/')
     dotsep = path.rfind('.')
     if dotsep > dirsep:
-        return path[dotsep+1:]
+        return path[dotsep + 1:]
     else:
         return ''

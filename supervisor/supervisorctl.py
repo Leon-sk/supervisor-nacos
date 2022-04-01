@@ -1,4 +1,5 @@
-#!/usr/bin/env python -u
+#!/usr/local/bin/env python3
+# -*-  coding:utf-8 -*-
 
 """supervisorctl -- control applications run by supervisord from the cmd line.
 
@@ -29,7 +30,10 @@ import socket
 import sys
 import threading
 
-from supervisor.compat import xmlrpclib
+try:  # pragma: no cover
+    import xmlrpc.client as xmlrpclib
+except ImportError:  # pragma: no cover
+    import xmlrpclib
 from supervisor.compat import urlparse
 from supervisor.compat import unicode
 from supervisor.compat import raw_input
@@ -44,6 +48,7 @@ from supervisor import xmlrpc
 from supervisor import states
 from supervisor import http_client
 
+
 class LSBInitExitStatuses:
     SUCCESS = 0
     GENERIC = 1
@@ -53,13 +58,16 @@ class LSBInitExitStatuses:
     NOT_INSTALLED = 5
     NOT_RUNNING = 7
 
+
 class LSBStatusExitStatuses:
     NOT_RUNNING = 3
     UNKNOWN = 4
 
+
 DEAD_PROGRAM_FAULTS = (xmlrpc.Faults.SPAWN_ERROR,
                        xmlrpc.Faults.ABNORMAL_TERMINATION,
                        xmlrpc.Faults.NOT_RUNNING)
+
 
 class fgthread(threading.Thread):
     """ A subclass of threading.Thread, with a kill() method.
@@ -80,20 +88,20 @@ class fgthread(threading.Thread):
                                                      self.ctl.options.username,
                                                      self.ctl.options.password)
 
-    def start(self): # pragma: no cover
+    def start(self):  # pragma: no cover
         # Start the thread
         self.__run_backup = self.run
         self.run = self.__run
         threading.Thread.start(self)
 
-    def run(self): # pragma: no cover
+    def run(self):  # pragma: no cover
         self.output_handler.get(self.ctl.options.serverurl,
                                 '/logtail/%s/stdout' % self.program)
         self.error_handler.get(self.ctl.options.serverurl,
                                '/logtail/%s/stderr' % self.program)
         asyncore.loop()
 
-    def __run(self): # pragma: no cover
+    def __run(self):  # pragma: no cover
         # Hacked run function, which installs the trace
         sys.settrace(self.globaltrace)
         self.__run_backup()
@@ -115,6 +123,7 @@ class fgthread(threading.Thread):
         self.output_handler.close()
         self.error_handler.close()
         self.killed = True
+
 
 class Controller(cmd.Cmd):
 
@@ -256,7 +265,7 @@ class Controller(cmd.Cmd):
     def upcheck(self):
         try:
             supervisor = self.get_supervisor()
-            api = supervisor.getVersion() # deprecated
+            api = supervisor.getVersion()  # deprecated
             from supervisor import rpcinterface
             if api != rpcinterface.API_VERSION:
                 self.output(
@@ -296,7 +305,7 @@ class Controller(cmd.Cmd):
         as complete(text, state) where text is a fragment to complete and
         state is an integer (0..n).  Each call returns a string with a new
         completion.  When no more are available, None is returned."""
-        if line is None: # line is only set in tests
+        if line is None:  # line is only set in tests
             import readline
             line = readline.get_line_buffer()
 
@@ -373,6 +382,7 @@ class Controller(cmd.Cmd):
     def help_EOF(self):
         self.output("To quit, type ^D or use the quit command")
 
+
 def get_names(inst):
     names = []
     classes = [inst.__class__]
@@ -383,6 +393,7 @@ def get_names(inst):
         names = names + dir(aclass)
     return names
 
+
 class ControllerPluginBase:
     name = 'unnamed'
 
@@ -391,6 +402,7 @@ class ControllerPluginBase:
 
     def _doc_header(self):
         return "%s commands (type help <topic>):" % self.name
+
     doc_header = property(_doc_header)
 
     def do_help(self, arg):
@@ -416,7 +428,7 @@ class ControllerPluginBase:
             help = {}
             for name in names:
                 if name[:5] == 'help_':
-                    help[name[5:]]=1
+                    help[name[5:]] = 1
             names.sort()
             # There can be duplicates if routines overridden
             prevname = ''
@@ -425,7 +437,7 @@ class ControllerPluginBase:
                     if name == prevname:
                         continue
                     prevname = name
-                    cmd=name[3:]
+                    cmd = name[3:]
                     if cmd in help:
                         cmds_doc.append(cmd)
                         del help[cmd]
@@ -436,9 +448,11 @@ class ControllerPluginBase:
             self.ctl.output('')
             self.ctl.print_topics(self.doc_header, cmds_doc, 15, 80)
 
+
 def not_all_langs():
     enc = getattr(sys.stdout, 'encoding', None) or ''
     return None if enc.lower().startswith('utf') else sys.stdout.encoding
+
 
 def check_encoding(ctl):
     problematic_enc = not_all_langs()
@@ -447,9 +461,11 @@ def check_encoding(ctl):
                    'output may fail. Check your LANG and PYTHONIOENCODING '
                    'environment settings.' % problematic_enc)
 
+
 class DefaultControllerPlugin(ControllerPluginBase):
     name = 'default'
-    listener = None # for unit tests
+    listener = None  # for unit tests
+
     def _tailf(self, path):
         check_encoding(self.ctl)
         self.ctl.output('==> Press Ctrl-C to exit <==')
@@ -467,7 +483,7 @@ class DefaultControllerPlugin(ControllerPluginBase):
             if self.listener is None:
                 listener = http_client.Listener()
             else:
-                listener = self.listener # for unit tests
+                listener = self.listener  # for unit tests
             handler = http_client.HTTPHandler(listener, username, password)
             handler.get(self.ctl.options.serverurl, path)
             asyncore.loop()
@@ -540,10 +556,10 @@ class DefaultControllerPlugin(ControllerPluginBase):
             try:
                 if channel == 'stdout':
                     output = supervisor.readProcessStdoutLog(name,
-                                                             -bytes, 0)
+                                                             - bytes, 0)
                 else:
                     output = supervisor.readProcessStderrLog(name,
-                                                             -bytes, 0)
+                                                             - bytes, 0)
             except xmlrpclib.Fault as e:
                 self.ctl.exitstatus = LSBInitExitStatuses.GENERIC
                 template = '%s: ERROR (%s)'
@@ -647,7 +663,7 @@ class DefaultControllerPlugin(ControllerPluginBase):
             if len(namespecs[i]) > maxlen:
                 maxlen = len(namespecs[i])
 
-        template = '%(namespec)-' + str(maxlen+3) + 's%(state)-10s%(desc)s'
+        template = '%(namespec)-' + str(maxlen + 3) + 's%(state)-10s%(desc)s'
         for i, info in enumerate(process_infos):
             line = template % {'namespec': namespecs[i],
                                'state': info['statename'],
@@ -1169,6 +1185,7 @@ class DefaultControllerPlugin(ControllerPluginBase):
                         "active config")
 
     def do_update(self, arg):
+
         def log(name, message):
             self.ctl.output("%s: %s" % (name, message))
 
@@ -1394,7 +1411,7 @@ class DefaultControllerPlugin(ControllerPluginBase):
             if a:
                 a.kill()
 
-    def help_fg(self,args=None):
+    def help_fg(self, args=None):
         self.ctl.output('fg <process>\tConnect to a process in foreground mode')
         self.ctl.output("\t\tCtrl-C to exit")
 
@@ -1413,6 +1430,7 @@ def main(args=None, options=None):
     if options.interactive:
         c.exec_cmdloop(args, options)
         sys.exit(0)  # exitstatus always 0 for interactive mode
+
 
 if __name__ == "__main__":
     main()

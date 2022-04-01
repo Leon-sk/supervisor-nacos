@@ -1,11 +1,7 @@
-# -*- Mode: Python -*-
-#
-#       Author: Sam Rushing <rushing@nightmare.com>
-#       Copyright 1996-2000 by Sam Rushing
-#                                                All Rights Reserved.
-#
+#!/usr/local/bin/env python3
+# -*-  coding:utf-8 -*-
 
-RCS_ID =  '$Id: auth_handler.py,v 1.6 2002/11/25 19:40:23 akuchling Exp $'
+RCS_ID = '$Id: auth_handler.py,v 1.6 2002/11/25 19:40:23 akuchling Exp $'
 
 # support for 'basic' authentication.
 
@@ -31,7 +27,9 @@ import supervisor.medusa.producers as producers
 
 # does anyone support digest authentication? (rfc2069)
 
+
 class auth_handler:
+
     def __init__ (self, dict, handler, realm='default'):
         self.authorizer = dictionary_authorizer (dict)
         self.handler = handler
@@ -64,7 +62,7 @@ class auth_handler:
                     self.handler.handle_request (request)
                 else:
                     self.handle_unauthorized (request)
-            #elif scheme == 'digest':
+            # elif scheme == 'digest':
             #       print 'digest: ',AUTHORIZATION.group(2)
             else:
                 sys.stderr.write('unknown/unsupported auth method: %s\n' % scheme)
@@ -72,11 +70,11 @@ class auth_handler:
         else:
             # list both?  prefer one or the other?
             # you could also use a 'nonce' here. [see below]
-            #auth = 'Basic realm="%s" Digest realm="%s"' % (self.realm, self.realm)
-            #nonce = self.make_nonce (request)
-            #auth = 'Digest realm="%s" nonce="%s"' % (self.realm, nonce)
-            #request['WWW-Authenticate'] = auth
-            #print 'sending header: %s' % request['WWW-Authenticate']
+            # auth = 'Basic realm="%s" Digest realm="%s"' % (self.realm, self.realm)
+            # nonce = self.make_nonce (request)
+            # auth = 'Digest realm="%s" nonce="%s"' % (self.realm, nonce)
+            # request['WWW-Authenticate'] = auth
+            # print 'sending header: %s' % request['WWW-Authenticate']
             self.handle_unauthorized (request)
 
     def handle_unauthorized (self, request):
@@ -121,7 +119,9 @@ class auth_handler:
                 )
         return producers.composite_producer(r)
 
+
 class dictionary_authorizer:
+
     def __init__ (self, dict):
         self.dict = dict
 
@@ -131,6 +131,7 @@ class dictionary_authorizer:
             return 1
         else:
             return 0
+
 
 AUTHORIZATION = re.compile (
         #               scheme  challenge

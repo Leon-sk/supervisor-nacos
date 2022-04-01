@@ -1,55 +1,11 @@
-# -*- Mode: Python; tab-width: 4 -*-
-#       Id: asynchat.py,v 2.26 2000/09/07 22:29:26 rushing Exp
-#       Author: Sam Rushing <rushing@nightmare.com>
-
-# ======================================================================
-# Copyright 1996 by Sam Rushing
-#
-#                         All Rights Reserved
-#
-# Permission to use, copy, modify, and distribute this software and
-# its documentation for any purpose and without fee is hereby
-# granted, provided that the above copyright notice appear in all
-# copies and that both that copyright notice and this permission
-# notice appear in supporting documentation, and that the name of Sam
-# Rushing not be used in advertising or publicity pertaining to
-# distribution of the software without specific, written prior
-# permission.
-#
-# SAM RUSHING DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
-# INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN
-# NO EVENT SHALL SAM RUSHING BE LIABLE FOR ANY SPECIAL, INDIRECT OR
-# CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
-# OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT,
-# NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-# CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-# ======================================================================
-
-r"""A class supporting chat-style (command/response) protocols.
-
-This class adds support for 'chat' style protocols - where one side
-sends a 'command', and the other sends a response (examples would be
-the common internet protocols - smtp, nntp, ftp, etc..).
-
-The handle_read() method looks at the input stream for the current
-'terminator' (usually '\r\n' for single-line responses, '\r\n.\r\n'
-for multi-line output), calling self.found_terminator() on its
-receipt.
-
-for example:
-Say you build an async nntp client using this class.  At the start
-of the connection, you'll have self.terminator set to '\r\n', in
-order to process the single-line greeting.  Just before issuing a
-'LIST' command you'll set it to '\r\n.\r\n'.  The output of the LIST
-command will be accumulated (using your own 'collect_incoming_data'
-method) up to the terminator, and then control will be returned to
-you - by calling your self.found_terminator() method.
-"""
+#!/usr/local/bin/env python3
+# -*-  coding:utf-8 -*-
 
 import socket
 from supervisor.medusa import asyncore_25 as asyncore
 from supervisor.compat import long
 from supervisor.compat import as_bytes
+
 
 class async_chat (asyncore.dispatcher):
     """This is an abstract class.  You must derive from this class, and add
@@ -57,8 +13,8 @@ class async_chat (asyncore.dispatcher):
 
     # these are overridable defaults
 
-    ac_in_buffer_size       = 4096
-    ac_out_buffer_size      = 4096
+    ac_in_buffer_size = 4096
+    ac_out_buffer_size = 4096
 
     def __init__ (self, conn=None, map=None):
         self.ac_in_buffer = b''
@@ -132,7 +88,7 @@ class async_chat (asyncore.dispatcher):
                     if index > 0:
                         # don't bother reporting the empty string (source of subtle bugs)
                         self.collect_incoming_data (self.ac_in_buffer[:index])
-                    self.ac_in_buffer = self.ac_in_buffer[index+terminator_len:]
+                    self.ac_in_buffer = self.ac_in_buffer[index + terminator_len:]
                     # This does the Right Thing if the terminator is changed here.
                     self.found_terminator()
                 else:
@@ -249,7 +205,9 @@ class simple_producer:
             self.data = b''
             return result
 
+
 class fifo:
+
     def __init__ (self, list=None):
         if not list:
             self.list = []
@@ -288,6 +246,7 @@ class fifo:
 # old python:   18307/s
 # re:        12820/s
 # regex:     14035/s
+
 
 def find_prefix_at_end (haystack, needle):
     l = len(needle) - 1

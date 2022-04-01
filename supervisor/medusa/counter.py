@@ -1,18 +1,8 @@
-# -*- Mode: Python -*-
-
-# It is tempting to add an __int__ method to this class, but it's not
-# a good idea.  This class tries to gracefully handle integer
-# overflow, and to hide this detail from both the programmer and the
-# user.  Note that the __str__ method can be relied on for printing out
-# the value of a counter:
-#
-# >>> print 'Total Client: %s' % self.total_clients
-#
-# If you need to do arithmetic with the value, then use the 'as_long'
-# method, the use of long arithmetic is a reminder that the counter
-# will overflow.
+#!/usr/local/bin/env python3
+# -*-  coding:utf-8 -*-
 
 from supervisor.compat import long
+
 
 class counter:
     """general-purpose counter"""

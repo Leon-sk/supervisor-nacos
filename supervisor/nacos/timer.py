@@ -1,15 +1,5 @@
-# -*- coding=utf-8 -*-
-
-"""
- Verion: 1.0
- Since : 2.7.18
- Author: zhangjian
- Site: https://github.com/xarrow/
- File: timer.py
- Time: 2020/8/30
- 
- Add New Functional nacos-sdk-python
-"""
+#!/usr/local/bin/env python3
+# -*-  coding:utf-8 -*-
 
 import threading
 
@@ -66,7 +56,7 @@ class NacosTimer(object):
         return self
 
     @property
-    def interval(self, ):
+    def interval(self,):
         return self._interval
 
     def set_interval(self, interval):
@@ -113,7 +103,7 @@ class NacosTimer(object):
             if not self._ignore_ex:
                 # stop timer
                 raise ex
-        self._timer = threading.Timer(self._interval, self.scheduler, )
+        self._timer = threading.Timer(self._interval, self.scheduler,)
         self._timer.start()
 
     def cancel(self):
@@ -122,7 +112,8 @@ class NacosTimer(object):
 
 
 class NacosTimerManager(object):
-    def __init__(self, ):
+
+    def __init__(self,):
         self._timers_container = {}
         self._executed = False
 
@@ -146,7 +137,7 @@ class NacosTimerManager(object):
             timer.scheduler()
         self._executed = True
 
-    def cancel_timer(self, timer_name=None, ):
+    def cancel_timer(self, timer_name=None,):
         """
         cancel timer , and  nacos timer still in container
         it can execute again.

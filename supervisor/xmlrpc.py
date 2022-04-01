@@ -1,3 +1,6 @@
+#!/usr/local/bin/env python3
+# -*-  coding:utf-8 -*-
+
 import datetime
 import re
 import socket
@@ -7,7 +10,10 @@ import traceback
 import types
 from xml.etree.ElementTree import iterparse
 
-from supervisor.compat import xmlrpclib
+try:  # pragma: no cover
+    import xmlrpc.client as xmlrpclib
+except ImportError:  # pragma: no cover
+    import xmlrpclib
 from supervisor.compat import StringIO
 from supervisor.compat import urllib
 from supervisor.compat import as_bytes
@@ -22,6 +28,7 @@ from supervisor.medusa.xmlrpc_handler import xmlrpc_handler
 from supervisor.medusa import producers
 
 from supervisor.http import NOT_DONE_YET
+
 
 class Faults:
     UNKNOWN_METHOD = 1
@@ -43,13 +50,16 @@ class Faults:
     STILL_RUNNING = 91
     CANT_REREAD = 92
 
+
 def getFaultDescription(code):
     for faultname in Faults.__dict__:
         if getattr(Faults, faultname) == code:
             return faultname
     return 'UNKNOWN'
 
+
 class RPCError(Exception):
+
     def __init__(self, code, extra=None):
         self.code = code
         self.text = getFaultDescription(code)
@@ -58,6 +68,7 @@ class RPCError(Exception):
 
     def __str__(self):
         return 'code=%r, text=%r' % (self.code, self.text)
+
 
 class DeferredXMLRPCResponse:
     """ A medusa producer that implements a deferred callback; requires
@@ -141,6 +152,7 @@ class DeferredXMLRPCResponse:
         if close_it:
             self.request.channel.close_when_done()
 
+
 def xmlrpc_marshal(value):
     ismethodresponse = not isinstance(value, xmlrpclib.Fault)
     if ismethodresponse:
@@ -151,7 +163,9 @@ def xmlrpc_marshal(value):
         body = xmlrpclib.dumps(value)
     return body
 
+
 class SystemNamespaceRPCInterface:
+
     def __init__(self, namespaces):
         self.namespaces = {}
         for name, inst in namespaces:
@@ -210,10 +224,10 @@ class SystemNamespaceRPCInterface:
                 ptypes = []
                 parsed = gettags(methods[method])
                 for thing in parsed:
-                    if thing[1] == 'return': # tag name
-                        rtype = thing[2] # datatype
-                    elif thing[1] == 'param': # tag name
-                        ptypes.append(thing[2]) # datatype
+                    if thing[1] == 'return':  # tag name
+                        rtype = thing[2]  # datatype
+                    elif thing[1] == 'param':  # tag name
+                        ptypes.append(thing[2])  # datatype
                 if rtype is None:
                     raise RPCError(Faults.SIGNATURE_UNSUPPORTED)
                 return [rtype] + ptypes
@@ -231,9 +245,9 @@ class SystemNamespaceRPCInterface:
         @param array calls  An array of call requests
         @return array result  An array of results
         """
-        remaining_calls = calls[:] # [{'methodName':x, 'params':x}, ...]
-        callbacks = [] # always empty or 1 callback function only
-        results = [] # results of completed calls
+        remaining_calls = calls[:]  # [{'methodName':x, 'params':x}, ...]
+        callbacks = []  # always empty or 1 callback function only
+        results = []  # results of completed calls
 
         # args are only to fool scoping and are never passed by caller
         def multi(remaining_calls=remaining_calls,
@@ -292,6 +306,7 @@ class SystemNamespaceRPCInterface:
                 return NOT_DONE_YET
             else:
                 return results
+
         multi.delay = 0.05
 
         # optimization: multi() is called here instead of just returning
@@ -302,15 +317,20 @@ class SystemNamespaceRPCInterface:
         else:
             return value
 
+
 class AttrDict(dict):
+
     # hack to make a dict's getattr equivalent to its getitem
     def __getattr__(self, name):
         return self.get(name)
 
+
 class RootRPCInterface:
+
     def __init__(self, subinterfaces):
         for name, rpcinterface in subinterfaces:
             setattr(self, name, rpcinterface)
+
 
 def capped_int(value):
     i = int(value)
@@ -320,10 +340,12 @@ def capped_int(value):
         i = xmlrpclib.MAXINT
     return i
 
+
 def make_datetime(text):
     return datetime.datetime(
         *time.strptime(text, "%Y%m%dT%H:%M:%S")[:6]
     )
+
 
 class supervisor_xmlrpc_handler(xmlrpc_handler):
     path = '/RPC2'
@@ -385,7 +407,7 @@ class supervisor_xmlrpc_handler(xmlrpc_handler):
                 params, method = self.loads(data)
             except:
                 logger.error(
-                    'XML-RPC request data %r is invalid: unmarshallable' %
+                    'XML-RPC request data %r is invalid: unmarshallable' % 
                     (data,)
                 )
                 request.error(400)
@@ -394,7 +416,7 @@ class supervisor_xmlrpc_handler(xmlrpc_handler):
             # no <methodName> in the request or name is an empty string
             if not method:
                 logger.error(
-                    'XML-RPC request data %r is invalid: no method name' %
+                    'XML-RPC request data %r is invalid: no method name' % 
                     (data,)
                     )
                 request.error(400)
@@ -408,7 +430,7 @@ class supervisor_xmlrpc_handler(xmlrpc_handler):
             try:
                 logger.trace('XML-RPC method called: %s()' % method)
                 value = self.call(method, params)
-                logger.trace('XML-RPC method %s() returned successfully' %
+                logger.trace('XML-RPC method %s() returned successfully' % 
                              method)
             except RPCError as err:
                 # turn RPCError reported by method into a Fault instance
@@ -445,6 +467,7 @@ class supervisor_xmlrpc_handler(xmlrpc_handler):
     def call(self, method, params):
         return traverse(self.rpcinterface, method, params)
 
+
 def traverse(ob, method, params):
     dotted_parts = method.split('.')
     # security (CVE-2017-11610, don't allow object traversal)
@@ -470,6 +493,7 @@ def traverse(ob, method, params):
     except TypeError:
         raise RPCError(Faults.INCORRECT_PARAMETERS)
 
+
 class SupervisorTransport(xmlrpclib.Transport):
     """
     Provides a Transport for xmlrpclib that uses
@@ -493,16 +517,20 @@ class SupervisorTransport(xmlrpclib.Transport):
                 port = 80
             else:
                 port = int(port)
+
             def get_connection(host=host, port=port):
                 return httplib.HTTPConnection(host, port)
+
             self._get_connection = get_connection
         elif serverurl.startswith('unix://'):
+
             def get_connection(serverurl=serverurl):
                 # we use 'localhost' here because domain names must be
                 # < 64 chars (or we'd use the serverurl filename)
                 conn = UnixStreamHTTPConnection('localhost')
                 conn.socketfile = serverurl[7:]
                 return conn
+
             self._get_connection = get_connection
         else:
             raise ValueError('Unknown protocol for serverurl %s' % serverurl)
@@ -542,7 +570,7 @@ class SupervisorTransport(xmlrpclib.Transport):
             raise xmlrpclib.ProtocolError(host + handler,
                                           r.status,
                                           r.reason,
-                                          '' )
+                                          '')
         data = r.read()
         data = as_string(data)
         # on 2.x, the Expat parser doesn't like Unicode which actually
@@ -553,11 +581,14 @@ class SupervisorTransport(xmlrpclib.Transport):
         p.close()
         return u.close()
 
+
 class UnixStreamHTTPConnection(httplib.HTTPConnection):
-    def connect(self): # pragma: no cover
+
+    def connect(self):  # pragma: no cover
         self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         # we abuse the host parameter as the socketname
         self.sock.connect(self.socketfile)
+
 
 def gettags(comment):
     """ Parse documentation strings into JavaDoc-like tokens """
@@ -601,5 +632,4 @@ def gettags(comment):
     tags.append((tag_lineno, tag, datatype, name, '\n'.join(tag_text)))
 
     return tags
-
 

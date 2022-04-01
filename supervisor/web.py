@@ -1,3 +1,6 @@
+#!/usr/local/bin/env python3
+# -*-  coding:utf-8 -*-
+
 import os
 import re
 import time
@@ -31,6 +34,7 @@ from supervisor.xmlrpc import Faults
 from supervisor.xmlrpc import RPCError
 
 from supervisor.rpcinterface import SupervisorNamespaceRPCInterface
+
 
 class DeferredWebProducer:
     """ A medusa producer that implements a deferred callback; requires
@@ -151,9 +155,12 @@ class DeferredWebProducer:
         if close_it:
             self.request.channel.close_when_done()
 
+
 class ViewContext:
+
     def __init__(self, **kw):
         self.__dict__.update(kw)
+
 
 class MeldView:
 
@@ -189,7 +196,9 @@ class MeldView:
     def clone(self):
         return self.root.clone()
 
+
 class TailView(MeldView):
+
     def render(self):
         supervisord = self.context.supervisord
         form = self.context.form
@@ -201,7 +210,7 @@ class TailView(MeldView):
             processname = form['processname']
             offset = 0
             limit = form.get('limit', '1024')
-            limit = min(-1024, int(limit)*-1 if limit.isdigit() else -1024)
+            limit = min(-1024, int(limit) * -1 if limit.isdigit() else -1024)
             if not processname:
                 tail = 'No process name found'
             else:
@@ -235,7 +244,9 @@ class TailView(MeldView):
 
         return as_string(root.write_xhtmlstring())
 
+
 class StatusView(MeldView):
+
     def actions_for_process(self, process):
         state = process.get_state()
         processname = urllib.quote(make_namespec(process.group.config.name,
@@ -292,7 +303,7 @@ class StatusView(MeldView):
 
         # the rpc interface code is already written to deal properly in a
         # deferred world, so just use it
-        main =   ('supervisor', SupervisorNamespaceRPCInterface(supervisord))
+        main = ('supervisor', SupervisorNamespaceRPCInterface(supervisord))
         system = ('system', SystemNamespaceRPCInterface([main]))
 
         rpcinterface = RootRPCInterface([main, system])
@@ -300,37 +311,45 @@ class StatusView(MeldView):
         if action:
 
             if action == 'refresh':
+
                 def donothing():
                     message = 'Page refreshed at %s' % time.ctime()
                     return message
+
                 donothing.delay = 0.05
                 return donothing
 
             elif action == 'stopall':
                 callback = rpcinterface.supervisor.stopAllProcesses()
+
                 def stopall():
                     if callback() is NOT_DONE_YET:
                         return NOT_DONE_YET
                     else:
                         return 'All stopped at %s' % time.ctime()
+
                 stopall.delay = 0.05
                 return stopall
 
             elif action == 'restartall':
                 callback = rpcinterface.system.multicall(
                     [ {'methodName':'supervisor.stopAllProcesses'},
-                      {'methodName':'supervisor.startAllProcesses'} ] )
+                      {'methodName':'supervisor.startAllProcesses'} ])
+
                 def restartall():
                     result = callback()
                     if result is NOT_DONE_YET:
                         return NOT_DONE_YET
                     return 'All restarted at %s' % time.ctime()
+
                 restartall.delay = 0.05
                 return restartall
 
             elif namespec:
+
                 def wrong():
                     return 'No such process named %s' % namespec
+
                 wrong.delay = 0.05
                 group_name, process_name = split_namespec(namespec)
                 group = supervisord.process_groups.get(group_name)
@@ -359,12 +378,15 @@ class StatusView(MeldView):
                         else:
                             msg = 'unexpected rpc fault [%d] %s' % (
                                 e.code, e.text)
+
                         def starterr():
                             return 'ERROR: Process %s: %s' % (namespec, msg)
+
                         starterr.delay = 0.05
                         return starterr
 
                     if callable(bool_or_callback):
+
                         def startprocess():
                             try:
                                 result = bool_or_callback()
@@ -381,11 +403,14 @@ class StatusView(MeldView):
                             if result is NOT_DONE_YET:
                                 return NOT_DONE_YET
                             return 'Process %s started' % namespec
+
                         startprocess.delay = 0.05
                         return startprocess
                     else:
+
                         def startdone():
                             return 'Process %s started' % namespec
+
                         startdone.delay = 0.05
                         return startdone
 
@@ -396,12 +421,15 @@ class StatusView(MeldView):
                             )
                     except RPCError as e:
                         msg = 'unexpected rpc fault [%d] %s' % (e.code, e.text)
+
                         def stoperr():
                             return msg
+
                         stoperr.delay = 0.05
                         return stoperr
 
                     if callable(bool_or_callback):
+
                         def stopprocess():
                             try:
                                 result = bool_or_callback()
@@ -411,11 +439,14 @@ class StatusView(MeldView):
                             if result is NOT_DONE_YET:
                                 return NOT_DONE_YET
                             return 'Process %s stopped' % namespec
+
                         stopprocess.delay = 0.05
                         return stopprocess
                     else:
+
                         def stopdone():
                             return 'Process %s stopped' % namespec
+
                         stopdone.delay = 0.05
                         return stopdone
 
@@ -429,16 +460,20 @@ class StatusView(MeldView):
                         )
                     if callable(results_or_callback):
                         callback = results_or_callback
+
                         def restartprocess():
                             results = callback()
                             if results is NOT_DONE_YET:
                                 return NOT_DONE_YET
                             return 'Process %s restarted' % namespec
+
                         restartprocess.delay = 0.05
                         return restartprocess
                     else:
+
                         def restartdone():
                             return 'Process %s restarted' % namespec
+
                         restartdone.delay = 0.05
                         return restartdone
 
@@ -448,13 +483,16 @@ class StatusView(MeldView):
                             namespec)
                     except RPCError as e:
                         msg = 'unexpected rpc fault [%d] %s' % (e.code, e.text)
+
                         def clearerr():
                             return msg
+
                         clearerr.delay = 0.05
                         return clearerr
 
                     def clearlog():
                         return 'Log for %s cleared' % namespec
+
                     clearlog.delay = 0.05
                     return clearlog
 
@@ -473,7 +511,7 @@ class StatusView(MeldView):
                 return NOT_DONE_YET
 
             else:
-                message =  self.callback()
+                message = self.callback()
                 if message is NOT_DONE_YET:
                     return NOT_DONE_YET
                 if message is not None:
@@ -532,7 +570,7 @@ class StatusView(MeldView):
 
                 anchor = tr_element.findmeld('name_anchor')
                 processname = make_namespec(item['group'], item['name'])
-                anchor.attributes(href='tail.html?processname=%s' %
+                anchor.attributes(href='tail.html?processname=%s' % 
                                   urllib.quote(processname))
                 anchor.content(processname)
 
@@ -562,13 +600,16 @@ class StatusView(MeldView):
 
         return as_string(root.write_xhtmlstring())
 
+
 class OKView:
     delay = 0
+
     def __init__(self, context):
         self.context = context
 
     def __call__(self):
         return {'body':'OK'}
+
 
 VIEWS = {
     'index.html': {
@@ -654,9 +695,9 @@ class supervisor_ui_handler:
         viewclass = viewinfo['view']
         viewtemplate = viewinfo['template']
         context = ViewContext(template=viewtemplate,
-                              request = request,
-                              form = form,
-                              response = response,
+                              request=request,
+                              form=form,
+                              response=response,
                               supervisord=self.supervisord)
         view = viewclass(context)
         pushproducer = request.channel.push_with_producer

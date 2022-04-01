@@ -1,22 +1,11 @@
-# -*- Mode: Python -*-
-#       $Id: filesys.py,v 1.9 2003/12/24 16:10:56 akuchling Exp $
-#       Author: Sam Rushing <rushing@nightmare.com>
-#
-# Generic filesystem interface.
-#
-
-# We want to provide a complete wrapper around any and all
-# filesystem operations.
-
-# this class is really just for documentation,
-# identifying the API for a filesystem object.
-
-# opening files for reading, and listing directories, should
-# return a producer.
+#!/usr/local/bin/env python3
+# -*-  coding:utf-8 -*-
 
 from supervisor.compat import long
 
+
 class abstract_filesystem:
+
     def __init__ (self):
         pass
 
@@ -55,7 +44,6 @@ class abstract_filesystem:
         """Change to the parent of the current directory."""
         pass
 
-
     def longify (self, path):
         """Return a 'long' representation of the filename
         [for the output of the LIST command]"""
@@ -71,15 +59,18 @@ class abstract_filesystem:
 
 # what to do if wd is an invalid directory?
 
+
 import os
 import stat
 import re
+
 
 def safe_stat (path):
     try:
         return path, os.stat (path)
     except:
         return None
+
 
 class os_filesystem:
     path_module = os.path
@@ -167,7 +158,7 @@ class os_filesystem:
         return os.rmdir (p)
 
     def rename(self, src, dst):
-        return os.rename(self.translate(src),self.translate(dst))
+        return os.rename(self.translate(src), self.translate(dst))
 
     # utility methods
     def normalize (self, path):
@@ -199,16 +190,17 @@ class os_filesystem:
                 self.wd
                 )
 
+
 if os.name == 'posix':
 
     class unix_filesystem (os_filesystem):
         pass
 
     class schizophrenic_unix_filesystem (os_filesystem):
-        PROCESS_UID     = os.getuid()
-        PROCESS_EUID    = os.geteuid()
-        PROCESS_GID     = os.getgid()
-        PROCESS_EGID    = os.getegid()
+        PROCESS_UID = os.getuid()
+        PROCESS_EUID = os.geteuid()
+        PROCESS_GID = os.getgid()
+        PROCESS_EGID = os.getegid()
 
         def __init__ (self, root, wd='/', persona=(None, None)):
             os_filesystem.__init__ (self, root, wd)
@@ -259,7 +251,9 @@ if os.name == 'posix':
 # use that.  Doesn't win32 provide such a 'real' filesystem?
 # [yes, I think something like this "\\.\c\windows"]
 
+
 class msdos_filesystem (os_filesystem):
+
     def longify (self, path_stat_info_tuple):
         (path, stat_info) = path_stat_info_tuple
         return msdos_longify (path, stat_info)
@@ -272,12 +266,15 @@ class msdos_filesystem (os_filesystem):
 # Note: this is most likely how I will handle ~user directories
 # with the http server.
 
+
 class merged_filesystem:
+
     def __init__ (self, *fsys):
         pass
 
 # this matches the output of NT's ftp server (when in
 # MSDOS mode) exactly.
+
 
 def msdos_longify (file, stat_info):
     if stat.S_ISDIR (stat_info[stat.ST_MODE]):
@@ -291,6 +288,7 @@ def msdos_longify (file, stat_info):
             stat_info[stat.ST_SIZE],
             file
             )
+
 
 def msdos_date (t):
     try:
@@ -307,11 +305,12 @@ def msdos_date (t):
     return '%02d-%02d-%02d  %02d:%02d%s' % (
             info[1],
             info[2],
-            info[0]%100,
+            info[0] % 100,
             hour,
             info[4],
             merid
             )
+
 
 months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -328,6 +327,7 @@ mode_table = {
         }
 
 import time
+
 
 def unix_longify (file, stat_info):
     # for now, only pay attention to the lower bits
@@ -356,6 +356,7 @@ def unix_longify (file, stat_info):
 # otherwise, it looks like this:
 # Oct 19 17:33
 
+
 def ls_date (now, t):
     try:
         info = time.gmtime (t)
@@ -364,13 +365,13 @@ def ls_date (now, t):
     # 15,600,000 == 86,400 * 180
     if (now - t) > 15600000:
         return '%s %2d  %d' % (
-                months[info[1]-1],
+                months[info[1] - 1],
                 info[2],
                 info[0]
                 )
     else:
         return '%s %2d %02d:%02d' % (
-                months[info[1]-1],
+                months[info[1] - 1],
                 info[2],
                 info[3],
                 info[4]
@@ -380,7 +381,9 @@ def ls_date (now, t):
 # Producers
 # ===========================================================================
 
+
 class list_producer:
+
     def __init__ (self, list, func=None):
         self.list = list
         self.func = func

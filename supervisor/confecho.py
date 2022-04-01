@@ -1,6 +1,10 @@
+#!/usr/local/bin/env python3
+# -*-  coding:utf-8 -*-
+
 import pkg_resources
 import sys
 from supervisor.compat import as_string
+
 
 def main(out=sys.stdout):
     config = pkg_resources.resource_string(__name__, 'skel/sample.conf')

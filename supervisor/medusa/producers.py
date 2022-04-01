@@ -1,4 +1,5 @@
-# -*- Mode: Python -*-
+#!/usr/local/bin/env python3
+# -*-  coding:utf-8 -*-
 
 RCS_ID = '$Id: producers.py,v 1.9 2004/04/21 13:56:28 akuchling Exp $'
 
@@ -14,8 +15,10 @@ producer, then wrap this with the 'chunked' transfer-encoding producer.
 from asynchat import find_prefix_at_end
 from supervisor.compat import as_bytes
 
+
 class simple_producer:
     """producer for a string"""
+
     def __init__ (self, data, buffer_size=1024):
         self.data = data
         self.buffer_size = buffer_size
@@ -30,8 +33,10 @@ class simple_producer:
             self.data = b''
             return result
 
+
 class scanning_producer:
     """like simple_producer, but more efficient for large strings"""
+
     def __init__ (self, data, buffer_size=1024):
         self.data = data
         self.buffer_size = buffer_size
@@ -50,6 +55,7 @@ class scanning_producer:
         else:
             return b''
 
+
 class lines_producer:
     """producer for a list of lines"""
 
@@ -63,6 +69,7 @@ class lines_producer:
             return '\r\n'.join(chunk) + '\r\n'
         else:
             return ''
+
 
 class buffer_list_producer:
     """producer for a list of strings"""
@@ -81,11 +88,12 @@ class buffer_list_producer:
             self.index += 1
             return data
 
+
 class file_producer:
     """producer wrapper for file[-like] objects"""
 
     # match http_channel's outgoing buffer size
-    out_buffer_size = 1<<16
+    out_buffer_size = 1 << 16
 
     def __init__ (self, file):
         self.done = 0
@@ -111,8 +119,10 @@ class file_producer:
 # don't try to print from within any of the methods
 # of this object.
 
+
 class output_producer:
     """Acts like an output file; suitable for capturing sys.stdout"""
+
     def __init__ (self):
         self.data = b''
 
@@ -141,8 +151,10 @@ class output_producer:
         else:
             return ''
 
+
 class composite_producer:
     """combine a fifo of producers into one"""
+
     def __init__ (self, producers):
         self.producers = producers
 
@@ -165,7 +177,7 @@ class globbing_producer:
     gain about 30% performance on requests to a single channel]
     """
 
-    def __init__ (self, producer, buffer_size=1<<16):
+    def __init__ (self, producer, buffer_size=1 << 16):
         self.producer = producer
         self.buffer = b''
         self.buffer_size = buffer_size
@@ -214,6 +226,7 @@ class hooked_producer:
 # Blessing, and it really ought to be used even with normal files.
 # How beautifully it blends with the concept of the producer.
 
+
 class chunked_producer:
     """A producer that implements the 'chunked' transfer coding for HTTP/1.1.
     Here is a sample usage:
@@ -243,10 +256,14 @@ class chunked_producer:
         else:
             return b''
 
+
 try:
+
+
     import zlib
 except ImportError:
     zlib = None
+
 
 class compressed_producer:
     """
@@ -280,6 +297,7 @@ class compressed_producer:
         else:
             return b''
 
+
 class escaping_producer:
 
     """A producer that escapes a sequence of characters"""
@@ -294,7 +312,7 @@ class escaping_producer:
 
     def more (self):
         esc_from = self.esc_from
-        esc_to   = self.esc_to
+        esc_to = self.esc_to
 
         buffer = self.buffer + self.producer.more()
 

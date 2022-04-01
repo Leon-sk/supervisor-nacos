@@ -1,4 +1,8 @@
+#!/usr/local/bin/env python3
+# -*-  coding:utf-8 -*-
+
 import socket
+
 
 class Proxy:
     """ Class for wrapping a shared resource object and getting
@@ -18,6 +22,7 @@ class Proxy:
 
     def _get(self):
         return self.object
+
 
 class ReferenceCounter:
     """ Class for tracking references to a shared resource
@@ -42,6 +47,7 @@ class ReferenceCounter:
         self.ref_count -= 1
         if self.ref_count == 0:
             self.on_zero()
+
 
 class SocketManager:
     """ Class for managing sockets in servers that create/bind/listen

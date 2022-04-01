@@ -1,8 +1,5 @@
-# This file was originally based on the meld3 package version 2.0.0
-# (https://pypi.org/project/meld3/2.0.0/).  The meld3 package is not
-# called out separately in Supervisor's license or copyright files
-# because meld3 had the same authors, copyright, and license as
-# Supervisor at the time this file was bundled with Supervisor.
+#!/usr/local/bin/env python3
+# -*-  coding:utf-8 -*-
 
 import email
 import re
@@ -55,13 +52,17 @@ _PUBLIC = as_bytes('PUBLIC', encoding='latin1')
 _DOCTYPE_END = as_bytes('>\n', encoding='latin1')
 
 if PY2:
+
     def encode(text, encoding):
         return text.encode(encoding)
+
 else:
+
     def encode(text, encoding):
         if not isinstance(text, bytes):
             text = text.encode(encoding)
         return text
+
 
 # replace element factory
 def Replace(text, structure=False):
@@ -70,7 +71,9 @@ def Replace(text, structure=False):
     element.structure = structure
     return element
 
+
 class PyHelper:
+
     def findmeld(self, node, name, default=None):
         iterator = self.getiterator(node)
         for element in iterator:
@@ -135,36 +138,38 @@ class PyHelper:
         replacenode.structure = structure
         node._children = [replacenode]
 
+
 helper = PyHelper()
 
-_MELD_NS_URL  = 'https://github.com/Supervisor/supervisor'
-_MELD_PREFIX  = '{%s}' % _MELD_NS_URL
-_MELD_LOCAL   = 'id'
-_MELD_ID      = '%s%s' % (_MELD_PREFIX, _MELD_LOCAL)
+_MELD_NS_URL = 'https://github.com/Supervisor/supervisor'
+_MELD_PREFIX = '{%s}' % _MELD_NS_URL
+_MELD_LOCAL = 'id'
+_MELD_ID = '%s%s' % (_MELD_PREFIX, _MELD_LOCAL)
 _MELD_SHORT_ID = 'meld:%s' % _MELD_LOCAL
 _XHTML_NS_URL = 'http://www.w3.org/1999/xhtml'
 _XHTML_PREFIX = '{%s}' % _XHTML_NS_URL
 _XHTML_PREFIX_LEN = len(_XHTML_PREFIX)
 
-
 _marker = []
+
 
 class doctype:
     # lookup table for ease of use in external code
-    html_strict  = ('HTML', '-//W3C//DTD HTML 4.01//EN',
+    html_strict = ('HTML', '-//W3C//DTD HTML 4.01//EN',
                     'http://www.w3.org/TR/html4/strict.dtd')
-    html         = ('HTML', '-//W3C//DTD HTML 4.01 Transitional//EN',
+    html = ('HTML', '-//W3C//DTD HTML 4.01 Transitional//EN',
                    'http://www.w3.org/TR/html4/loose.dtd')
     xhtml_strict = ('html', '-//W3C//DTD XHTML 1.0 Strict//EN',
                     'http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd')
-    xhtml        = ('html', '-//W3C//DTD XHTML 1.0 Transitional//EN',
+    xhtml = ('html', '-//W3C//DTD XHTML 1.0 Transitional//EN',
                     'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd')
+
 
 class _MeldElementInterface:
     parent = None
     attrib = None
-    text   = None
-    tail   = None
+    text = None
+    tail = None
     structure = None
 
     # overrides to reduce MRU lookups
@@ -724,7 +729,9 @@ class _MeldElementInterface:
             parent = parent.parent
         return L
 
+
 class MeldTreeBuilder(TreeBuilder):
+
     def __init__(self):
         TreeBuilder.__init__(self, element_factory=_MeldElementInterface)
         self.meldids = {}
@@ -734,7 +741,7 @@ class MeldTreeBuilder(TreeBuilder):
         for key, value in attrs.items():
             if key == _MELD_ID:
                 if value in self.meldids:
-                    raise ValueError('Repeated meld id "%s" in source' %
+                    raise ValueError('Repeated meld id "%s" in source' % 
                                      value)
                 self.meldids[value] = 1
                 break
@@ -747,6 +754,7 @@ class MeldTreeBuilder(TreeBuilder):
 
     def doctype(self, name, pubid, system):
         pass
+
 
 class HTMLXMLParser(HTMLParser):
     """ A mostly-cut-and-paste of ElementTree's HTMLTreeBuilder that
@@ -800,7 +808,7 @@ class HTMLXMLParser(HTMLParser):
                 if k == _MELD_SHORT_ID:
                     k = _MELD_ID
                     if self.meldids.get(v):
-                        raise ValueError('Repeated meld id "%s" in source' %
+                        raise ValueError('Repeated meld id "%s" in source' % 
                                          v)
                     self.meldids[v] = 1
                 else:
@@ -843,12 +851,13 @@ class HTMLXMLParser(HTMLParser):
         self.builder.data(data)
 
     def unknown_entityref(self, name):
-        pass # ignore by default; override if necessary
+        pass  # ignore by default; override if necessary
 
     def handle_comment(self, data):
         self.builder.start(Comment, {})
         self.builder.data(data)
         self.builder.end(Comment)
+
 
 def do_parse(source, parser):
     root = et_parse(source, parser=parser).getroot()
@@ -858,6 +867,7 @@ def do_parse(source, parser):
             c.parent = p
     return root
 
+
 def parse_xml(source):
     """ Parse source (a filelike object) into an element tree.  If
     html is true, use a parser that can resolve somewhat ambiguous
@@ -866,21 +876,26 @@ def parse_xml(source):
     parser = XMLParser(target=builder)
     return do_parse(source, parser)
 
+
 def parse_html(source, encoding=None):
     builder = MeldTreeBuilder()
     parser = HTMLXMLParser(builder, encoding)
     return do_parse(source, parser)
 
+
 def parse_xmlstring(text):
     source = StringIO(text)
     return parse_xml(source)
+
 
 def parse_htmlstring(text, encoding=None):
     source = StringIO(text)
     return parse_html(source, encoding)
 
+
 attrib_needs_escaping = re.compile(r'[&"<]').search
 cdata_needs_escaping = re.compile(r'[&<]').search
+
 
 def _both_case(mapping):
     # Add equivalent upper-case keys to mapping.
@@ -889,18 +904,19 @@ def _both_case(mapping):
         mapping[k.upper()] = mapping[k]
 
 
-_HTMLTAGS_UNBALANCED    = {'area':1, 'base':1, 'basefont':1, 'br':1, 'col':1,
+_HTMLTAGS_UNBALANCED = {'area':1, 'base':1, 'basefont':1, 'br':1, 'col':1,
                            'frame':1, 'hr':1, 'img':1, 'input':1, 'isindex':1,
                            'link':1, 'meta':1, 'param':1}
 _both_case(_HTMLTAGS_UNBALANCED)
 
-_HTMLTAGS_NOESCAPE      = {'script':1, 'style':1}
+_HTMLTAGS_NOESCAPE = {'script':1, 'style':1}
 _both_case(_HTMLTAGS_NOESCAPE)
 
-_HTMLATTRS_BOOLEAN      = {'selected':1, 'checked':1, 'compact':1, 'declare':1,
+_HTMLATTRS_BOOLEAN = {'selected':1, 'checked':1, 'compact':1, 'declare':1,
                            'defer':1, 'disabled':1, 'ismap':1, 'multiple':1,
                            'nohref':1, 'noresize':1, 'noshade':1, 'nowrap':1}
 _both_case(_HTMLATTRS_BOOLEAN)
+
 
 def _write_html(write, node, encoding, namespaces, depth=-1, maxdepth=None):
     """ Walk 'node', calling 'write' with bytes(?).
@@ -908,7 +924,7 @@ def _write_html(write, node, encoding, namespaces, depth=-1, maxdepth=None):
     if encoding is None:
         encoding = 'utf-8'
 
-    tag  = node.tag
+    tag = node.tag
     tail = node.tail
     text = node.text
     tail = node.tail
@@ -932,7 +948,7 @@ def _write_html(write, node, encoding, namespaces, depth=-1, maxdepth=None):
         write(encode('<!-- ' + text + ' -->', encoding))
 
     else:
-        xmlns_items = [] # new namespaces in this scope
+        xmlns_items = []  # new namespaces in this scope
         try:
             if tag[:1] == "{":
                 if tag[:_XHTML_PREFIX_LEN] == _XHTML_PREFIX:
@@ -977,7 +993,7 @@ def _write_html(write, node, encoding, namespaces, depth=-1, maxdepth=None):
             elif cdata_needs_escaping(text):
                 to_write += _escape_cdata(text)
             else:
-                to_write += encode(text,encoding)
+                to_write += encode(text, encoding)
 
         write(to_write)
 
@@ -1000,7 +1016,8 @@ def _write_html(write, node, encoding, namespaces, depth=-1, maxdepth=None):
         if cdata_needs_escaping(tail):
             write(_escape_cdata(tail))
         else:
-            write(encode(tail,encoding))
+            write(encode(tail, encoding))
+
 
 def _write_xml(write, node, encoding, namespaces, pipeline, xhtml=False):
     """ Write XML to a file """
@@ -1008,12 +1025,12 @@ def _write_xml(write, node, encoding, namespaces, pipeline, xhtml=False):
         encoding = 'utf-8'
     tag = node.tag
     if tag is Comment:
-        write(_COMMENT_START +
-              _escape_cdata(node.text, encoding) +
+        write(_COMMENT_START + 
+              _escape_cdata(node.text, encoding) + 
               _COMMENT_END)
     elif tag is ProcessingInstruction:
-        write(_PI_START +
-              _escape_cdata(node.text, encoding) +
+        write(_PI_START + 
+              _escape_cdata(node.text, encoding) + 
               _PI_END)
     elif tag is Replace:
         if node.structure:
@@ -1029,7 +1046,7 @@ def _write_xml(write, node, encoding, namespaces, pipeline, xhtml=False):
             items = list(node.attrib.items())
         else:
             items = []  # must always be sortable.
-        xmlns_items = [] # new namespaces in this scope
+        xmlns_items = []  # new namespaces in this scope
         try:
             if tag[:1] == "{":
                 tag, xmlns = fixtag(tag, namespaces)
@@ -1039,7 +1056,7 @@ def _write_xml(write, node, encoding, namespaces, pipeline, xhtml=False):
             _raise_serialization_error(tag)
         write(_OPEN_TAG_START + encode(tag, encoding))
         if items or xmlns_items:
-            items.sort() # lexical order
+            items.sort()  # lexical order
             for k, v in items:
                 try:
                     if k[:1] == "{":
@@ -1071,6 +1088,7 @@ def _write_xml(write, node, encoding, namespaces, pipeline, xhtml=False):
     if node.tail:
         write(_escape_cdata(node.tail, encoding))
 
+
 def _encode_attrib(k, v, encoding):
     return _BLANK.join((_SPACE,
                         encode(k, encoding),
@@ -1082,8 +1100,10 @@ def _encode_attrib(k, v, encoding):
 
 # overrides to elementtree to increase speed and get entity quoting correct.
 
+
 # negative lookahead assertion
 _NONENTITY_RE = re.compile(as_bytes(r'&(?!([#\w]*;))', encoding='latin1'))
+
 
 def _escape_cdata(text, encoding=None):
     # Return escaped character data as bytes.
@@ -1100,6 +1120,7 @@ def _escape_cdata(text, encoding=None):
         return encoded
     except (TypeError, AttributeError):
         _raise_serialization_error(text)
+
 
 def _escape_attrib(text, encoding):
     # Return escaped attribute value as bytes.
@@ -1121,19 +1142,21 @@ def _escape_attrib(text, encoding):
 
 # utility functions
 
+
 def _write_declaration(write, encoding):
     # Write as bytes.
     if not encoding:
         write(_XML_PROLOG_BEGIN + _XML_PROLOG_END)
     else:
-        write(_XML_PROLOG_BEGIN +
-              _SPACE +
-              _ENCODING +
-              _EQUAL +
-              _QUOTE +
-              as_bytes(encoding, encoding='latin1') +
-              _QUOTE +
+        write(_XML_PROLOG_BEGIN + 
+              _SPACE + 
+              _ENCODING + 
+              _EQUAL + 
+              _QUOTE + 
+              as_bytes(encoding, encoding='latin1') + 
+              _QUOTE + 
               _XML_PROLOG_END)
+
 
 def _write_doctype(write, doctype):
     # Write as bytes.
@@ -1142,14 +1165,16 @@ def _write_doctype(write, doctype):
     except (ValueError, TypeError):
         raise ValueError("doctype must be supplied as a 3-tuple in the form "
                          "(name, pubid, system) e.g. '%s'" % doctype.xhtml)
-    write(_DOCTYPE_BEGIN + _SPACE + as_bytes(name, encoding='latin1') +
-          _SPACE + _PUBLIC + _SPACE +
-          _QUOTE + as_bytes(pubid, encoding='latin1') + _QUOTE + _SPACE +
-          _QUOTE + as_bytes(system, encoding='latin1') + _QUOTE +
+    write(_DOCTYPE_BEGIN + _SPACE + as_bytes(name, encoding='latin1') + 
+          _SPACE + _PUBLIC + _SPACE + 
+          _QUOTE + as_bytes(pubid, encoding='latin1') + _QUOTE + _SPACE + 
+          _QUOTE + as_bytes(system, encoding='latin1') + _QUOTE + 
           _DOCTYPE_END)
+
 
 _XML_DECL_RE = re.compile(r'<\?xml .*?\?>')
 _BEGIN_TAG_RE = re.compile(r'<[^/?!]?\w+')
+
 
 def insert_doctype(data, doctype=doctype.xhtml):
     # jam an html doctype declaration into 'data' if it
@@ -1165,6 +1190,7 @@ def insert_doctype(data, doctype=doctype.xhtml):
     else:
         return dt_string + data
 
+
 def insert_meld_ns_decl(data):
     match = _BEGIN_TAG_RE.search(data)
     if match is not None:
@@ -1172,8 +1198,9 @@ def insert_meld_ns_decl(data):
         before = data[:start]
         tag = data[start:end] + ' xmlns:meld="%s"' % _MELD_NS_URL
         after = data[end:]
-        data =  before + tag + after
+        data = before + tag + after
     return data
+
 
 def prefeed(data, doctype=doctype.xhtml):
     if data.find('<!DOCTYPE') == -1:
@@ -1181,6 +1208,7 @@ def prefeed(data, doctype=doctype.xhtml):
     if data.find('xmlns:meld') == -1:
         data = insert_meld_ns_decl(data)
     return data
+
 
 def sharedlineage(srcelement, tgtelement):
     srcparent = srcelement.parent
@@ -1194,6 +1222,7 @@ def sharedlineage(srcelement, tgtelement):
     elif tgtparent and srcparent:
         return sharedlineage(srcparent, tgtparent)
     return False
+
 
 def diffreduce(elements):
     # each element in 'elements' should all have non-None meldids, and should
@@ -1209,12 +1238,14 @@ def diffreduce(elements):
         reduced.append(element)
     return reduced
 
+
 def intersection(S1, S2):
     L = []
     for element in S1:
         if element in S2:
             L.append(element)
     return L
+
 
 def melditerator(element, meldid=None, _MELD_ID=_MELD_ID):
     nodeid = element.attrib.get(_MELD_ID)
@@ -1236,8 +1267,9 @@ def melditerator(element, meldid=None, _MELD_ID=_MELD_ID):
 #       - xml.elementtree.ElementTree.fixtag
 #-----------------------------------------------------------------------------
 
-_NON_ASCII_MIN = as_string('\xc2\x80', 'utf-8')        # u'\u0080'
-_NON_ASCII_MAX = as_string('\xef\xbf\xbf', 'utf-8')    # u'\uffff'
+
+_NON_ASCII_MIN = as_string('\xc2\x80', 'utf-8')  # u'\u0080'
+_NON_ASCII_MAX = as_string('\xef\xbf\xbf', 'utf-8')  # u'\uffff'
 
 _escape_map = {
     "&": "&amp;",
@@ -1254,24 +1286,29 @@ _namespace_map = {
     "http://schemas.xmlsoap.org/wsdl/": "wsdl",
 }
 
+
 def _encode(s, encoding):
     try:
         return s.encode(encoding)
     except AttributeError:
         return s
 
+
 def _raise_serialization_error(text):
     raise TypeError(
         "cannot serialize %r (type %s)" % (text, type(text).__name__)
         )
 
+
 _pattern = None
+
+
 def _encode_entity(text):
     # map reserved and non-ascii characters to numerical entities
     global _pattern
     if _pattern is None:
         _ptxt = r'[&<>\"' + _NON_ASCII_MIN + '-' + _NON_ASCII_MAX + ']+'
-        #_pattern = re.compile(eval(r'u"[&<>\"\u0080-\uffff]+"'))
+        # _pattern = re.compile(eval(r'u"[&<>\"\u0080-\uffff]+"'))
         _pattern = re.compile(_ptxt)
 
     def _escape_entities(m):
@@ -1283,10 +1320,12 @@ def _encode_entity(text):
                 text = "&#%d;" % ord(char)
             append(text)
         return ''.join(out)
+
     try:
         return _encode(_pattern.sub(_escape_entities, text), "ascii")
     except TypeError:
         _raise_serialization_error(text)
+
 
 def fixtag(tag, namespaces):
     # given a decorated tag (of the form {uri}tag), return prefixed

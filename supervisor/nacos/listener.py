@@ -1,4 +1,6 @@
-# -*- coding=utf-8 -*-
+#!/usr/local/bin/env python3
+# -*-  coding:utf-8 -*-
+
 from abc import abstractmethod
 
 
@@ -10,6 +12,7 @@ class Event(object):
 
 
 class AbstractListener(object):
+
     def __init__(self, listener_name):
         self._listener_name = listener_name
 
@@ -23,6 +26,7 @@ class AbstractListener(object):
 
 
 class AbstractListenerManager(object):
+
     @abstractmethod
     def manager_context(self):
         pass
@@ -45,6 +49,7 @@ class AbstractListenerManager(object):
 
 
 class SubscribeListener(AbstractListener):
+
     def __init__(self, fn, listener_name):
         """
 

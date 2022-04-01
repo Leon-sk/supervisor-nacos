@@ -1,18 +1,11 @@
-#!/usr/bin/env python -u
-
-"""pidproxy -- run command and proxy signals to it via its pidfile.
-
-This executable runs a command and then monitors a pidfile.  When this
-executable receives a signal, it sends the same signal to the pid
-in the pidfile.
-
-Usage: %s <pidfile name> <command> [<cmdarg1> ...]
-"""
+#!/usr/local/bin/env python3
+# -*-  coding:utf-8 -*-
 
 import os
 import sys
 import signal
 import time
+
 
 class PidProxy:
     pid = None
@@ -65,9 +58,11 @@ class PidProxy:
         if sig in [signal.SIGTERM, signal.SIGINT, signal.SIGQUIT]:
             sys.exit(0)
 
+
 def main():
     pp = PidProxy(sys.argv)
     pp.go()
+
 
 if __name__ == '__main__':
     main()

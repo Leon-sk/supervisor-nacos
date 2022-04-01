@@ -1,9 +1,5 @@
-# -*- Mode: Python -*-
-
-# See http://www.xml-rpc.com/
-#     http://www.pythonware.com/products/xmlrpc/
-
-# Based on "xmlrpcserver.py" by Fredrik Lundh (fredrik@pythonware.com)
+#!/usr/local/bin/env python3
+# -*-  coding:utf-8 -*-
 
 VERSION = "$Id: xmlrpc_handler.py,v 1.6 2004/04/21 14:09:24 akuchling Exp $"
 
@@ -16,6 +12,7 @@ except:
     import xmlrpc.client as xmlrpclib
 
 import sys
+
 
 class xmlrpc_handler:
 
@@ -60,6 +57,7 @@ class xmlrpc_handler:
         # override this method to implement RPC methods
         raise Exception("NotYetImplemented")
 
+
 class collector:
 
     """gathers input for POST and PUT requests"""
@@ -89,6 +87,7 @@ class collector:
         # convert the data back to text for processing
         data = as_string(b''.join(self.data))
         self.handler.continue_request (data, self.request)
+
 
 if __name__ == '__main__':
 

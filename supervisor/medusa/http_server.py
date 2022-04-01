@@ -1,10 +1,7 @@
-# -*- Mode: Python -*-
-#
-#       Author: Sam Rushing <rushing@nightmare.com>
-#       Copyright 1996-2000 by Sam Rushing
-#                                                All Rights Reserved.
-#
-RCS_ID =  '$Id: http_server.py,v 1.12 2004/04/21 15:11:44 akuchling Exp $'
+#!/usr/local/bin/env python3
+# -*-  coding:utf-8 -*-
+
+RCS_ID = '$Id: http_server.py,v 1.12 2004/04/21 15:11:44 akuchling Exp $'
 
 # python modules
 import re
@@ -34,6 +31,7 @@ except ImportError:
 # ===========================================================================
 #                                                       Request Object
 # ===========================================================================
+
 
 class http_request:
 
@@ -134,7 +132,6 @@ class http_request:
             del self.reply_headers[name]
             found_it = 1
 
-
         removed_headers = []
         if not value is None:
             if (name, value) in self.__reply_header_list:
@@ -157,7 +154,6 @@ class http_request:
         for h in removed_headers:
             self.__reply_header_list.remove(h)
 
-
     def get_reply_headers(self):
         """ Get the tuple of headers that will be used
         for generating reply headers"""
@@ -168,10 +164,10 @@ class http_request:
         # UNLESS there's already an entry in the list
         # that would have overwritten the dict entry
         # if the dict was the only storage...
-        header_names = [n for n,v in header_tuples]
-        for n,v in self.reply_headers.items():
+        header_names = [n for n, v in header_tuples]
+        for n, v in self.reply_headers.items():
             if n not in header_names:
-                header_tuples.append((n,v))
+                header_tuples.append((n, v))
                 header_names.append(n)
         # Ok, that should do it.  Now, if there were any
         # headers in the dict that weren't in the list,
@@ -196,7 +192,6 @@ class http_request:
     # This is the end of the new reply header
     # management section.
     ####################################################
-
 
     # --------------------------------------------------
     # split a uri
@@ -387,7 +382,7 @@ class http_request:
         else:
             offset = '+%02d%02d' % (h, m)
 
-        return time.strftime ( '%d/%b/%Y:%H:%M:%S ', gmt) + offset
+        return time.strftime ('%d/%b/%Y:%H:%M:%S ', gmt) + offset
 
     def log (self, bytes):
         self.channel.server.logger.log (
@@ -458,15 +453,15 @@ class http_request:
     def log_info(self, msg, level):
         pass
 
-
 # ===========================================================================
 #                                                HTTP Channel Object
 # ===========================================================================
 
+
 class http_channel (asynchat.async_chat):
 
     # use a larger default output buffer
-    ac_out_buffer_size = 1<<16
+    ac_out_buffer_size = 1 << 16
 
     current_request = None
     channel_counter = counter()
@@ -620,7 +615,7 @@ class http_channel (asynchat.async_chat):
                         self.server.exceptions.increment()
                         (file, fun, line), t, v, tbinfo = asyncore.compact_traceback()
                         self.log_info(
-                                        'Server Error: %s, %s: file: %s line: %s' % (t,v,file,line),
+                                        'Server Error: %s, %s: file: %s line: %s' % (t, v, file, line),
                                         'error')
                         try:
                             r.error (500)
@@ -650,6 +645,7 @@ class http_channel (asynchat.async_chat):
 # ===========================================================================
 #                                                HTTP Server Object
 # ===========================================================================
+
 
 class http_server (asyncore.dispatcher):
 
@@ -682,14 +678,14 @@ class http_server (asyncore.dispatcher):
             self.server_name = socket.gethostbyaddr (ip)[0]
         except socket.error:
             self.log_info('Cannot do reverse lookup', 'warning')
-            self.server_name = ip       # use the IP address as the "hostname"
+            self.server_name = ip  # use the IP address as the "hostname"
 
         self.server_port = port
         self.total_clients = counter()
         self.total_requests = counter()
         self.exceptions = counter()
         self.bytes_out = counter()
-        self.bytes_in  = counter()
+        self.bytes_in = counter()
 
         if not logger_object:
             logger_object = logger.file_logger (sys.stdout)
@@ -755,6 +751,7 @@ class http_server (asyncore.dispatcher):
 
     def status (self):
         from supervisor.medusa.util import english_bytes
+
         def nice_bytes (n):
             return ''.join(english_bytes (n))
 
@@ -767,20 +764,21 @@ class http_server (asyncore.dispatcher):
 
         return producers.composite_producer (
                 [producers.lines_producer (
-                        ['<h2>%s</h2>'                                                  % self.SERVER_IDENT,
-                        '<br>Listening on: <b>Host:</b> %s'             % self.server_name,
-                        '<b>Port:</b> %d'                                               % self.port,
+                        ['<h2>%s</h2>' % self.SERVER_IDENT,
+                        '<br>Listening on: <b>Host:</b> %s' % self.server_name,
+                        '<b>Port:</b> %d' % self.port,
                          '<p><ul>'
-                         '<li>Total <b>Clients:</b> %s'                 % self.total_clients,
-                         '<b>Requests:</b> %s'                                  % self.total_requests,
-                         '<b>Requests/Client:</b> %.1f'                 % ratio,
-                         '<li>Total <b>Bytes In:</b> %s'        % (nice_bytes (self.bytes_in.as_long())),
-                         '<b>Bytes Out:</b> %s'                         % (nice_bytes (self.bytes_out.as_long())),
-                         '<li>Total <b>Exceptions:</b> %s'              % self.exceptions,
+                         '<li>Total <b>Clients:</b> %s' % self.total_clients,
+                         '<b>Requests:</b> %s' % self.total_requests,
+                         '<b>Requests/Client:</b> %.1f' % ratio,
+                         '<li>Total <b>Bytes In:</b> %s' % (nice_bytes (self.bytes_in.as_long())),
+                         '<b>Bytes Out:</b> %s' % (nice_bytes (self.bytes_out.as_long())),
+                         '<li>Total <b>Exceptions:</b> %s' % self.exceptions,
                          '</ul><p>'
                          '<b>Extension List</b><ul>',
                          ])] + handler_stats + [producers.simple_producer('</ul>')]
                 )
+
 
 def maybe_status (thing):
     if hasattr (thing, 'status'):
@@ -788,7 +786,9 @@ def maybe_status (thing):
     else:
         return None
 
+
 CONNECTION = re.compile ('Connection: (.*)', re.IGNORECASE)
+
 
 # merge multi-line headers
 # [486dx2: ~500/sec]
@@ -801,12 +801,14 @@ def join_headers (headers):
             r.append (headers[i])
     return r
 
+
 def get_header (head_reg, lines, group=1):
     for line in lines:
         m = head_reg.match (line)
         if m and m.end() == len(line):
             return m.group (group)
     return ''
+
 
 def get_header_match (head_reg, lines):
     for line in lines:
@@ -815,7 +817,9 @@ def get_header_match (head_reg, lines):
             return m
     return ''
 
+
 REQUEST = re.compile ('([^ ]+) ([^ ]+)(( HTTP/([0-9.]+))$|$)')
+
 
 def crack_request (r):
     m = REQUEST.match (r)
@@ -827,6 +831,7 @@ def crack_request (r):
         return m.group(1), m.group(2), version
     else:
         return None, None, None
+
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
@@ -853,11 +858,13 @@ if __name__ == '__main__':
                 )
         cs = chat_server.chat_server ('', 7777)
         if '-p' in sys.argv:
+
             def profile_loop ():
                 try:
                     asyncore.loop()
                 except KeyboardInterrupt:
                     pass
+
             import profile
             profile.run ('profile_loop()', 'profile.out')
         else:

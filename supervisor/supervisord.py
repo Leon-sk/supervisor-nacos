@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/local/bin/env python3
+# -*-  coding:utf-8 -*-
 
 """supervisord -- run a set of applications as daemons.
 
@@ -45,11 +46,12 @@ from supervisor import events
 from supervisor.states import SupervisorStates
 from supervisor.states import getProcessStateDescription
 
+
 class Supervisor:
-    stopping = False # set after we detect that we are handling a stop request
-    lastshutdownreport = 0 # throttle for delayed process error reports at stop
-    process_groups = None # map of process group name to process group object
-    stop_groups = None # list used for priority ordered shutdown
+    stopping = False  # set after we detect that we are handling a stop request
+    lastshutdownreport = 0  # throttle for delayed process error reports at stop
+    process_groups = None  # map of process group name to process group object
+    stop_groups = None  # list used for priority ordered shutdown
 
     def __init__(self, options):
         self.options = options
@@ -78,13 +80,14 @@ class Supervisor:
         self.run()
 
     def run(self):
-        self.process_groups = {} # clear
-        self.stop_groups = None # clear
+        self.process_groups = {}  # clear
+        self.stop_groups = None  # clear
         events.clear()
         try:
             for config in self.options.process_group_configs:
                 self.add_process_group(config)
             self.options.openhttpservers(self)
+            self.options.opennacos(self)
             self.options.setsignals()
             if (not self.options.nodaemon) and self.options.first:
                 self.options.daemonize()
@@ -102,7 +105,7 @@ class Supervisor:
         curdict = dict(zip([cfg.name for cfg in cur], cur))
         newdict = dict(zip([cfg.name for cfg in new], new))
 
-        added   = [cand for cand in new if cand.name not in curdict]
+        added = [cand for cand in new if cand.name not in curdict]
         removed = [cand for cand in cur if cand.name not in newdict]
 
         changed = [cand for cand in new
@@ -142,7 +145,7 @@ class Supervisor:
         if unstopped:
             # throttle 'waiting for x to die' reports
             now = time.time()
-            if now > (self.lastshutdownreport + 3): # every 3 secs
+            if now > (self.lastshutdownreport + 3):  # every 3 secs
                 names = [ as_string(p.config.name) for p in unstopped ]
                 namestr = ', '.join(names)
                 self.options.logger.info('waiting for %s to die' % namestr)
@@ -173,7 +176,7 @@ class Supervisor:
 
     def runforever(self):
         events.notify(events.SupervisorRunningEvent())
-        timeout = 1 # this cannot be fewer than the smallest TickEvent (5)
+        timeout = 1  # this cannot be fewer than the smallest TickEvent (5)
 
         socket_map = self.options.get_socket_map()
 
@@ -283,7 +286,7 @@ class Supervisor:
             if not once:
                 # keep reaping until no more kids to reap, but don't recurse
                 # infintely
-                self.reap(once=False, recursionguard=recursionguard+1)
+                self.reap(once=False, recursionguard=recursionguard + 1)
 
     def handle_signal(self):
         sig = self.options.get_signal()
@@ -316,11 +319,13 @@ class Supervisor:
     def get_state(self):
         return self.options.mood
 
+
 def timeslice(period, when):
     return int(when - (when % period))
 
+
 # profile entry point
-def profile(cmd, globals, locals, sort_order, callers): # pragma: no cover
+def profile(cmd, globals, locals, sort_order, callers):  # pragma: no cover
     try:
         import cProfile as profile
     except ImportError:
@@ -358,17 +363,20 @@ def main(args=None, test=False):
         else:
             go(options)
         options.close_httpservers()
+        options.close_nacos()
         options.close_logger()
         first = False
         if test or (options.mood < SupervisorStates.RESTARTING):
             break
 
-def go(options): # pragma: no cover
+
+def go(options):  # pragma: no cover
     d = Supervisor(options)
     try:
         d.main()
     except asyncore.ExitNow:
         pass
 
-if __name__ == "__main__": # pragma: no cover
+
+if __name__ == "__main__":  # pragma: no cover
     main()

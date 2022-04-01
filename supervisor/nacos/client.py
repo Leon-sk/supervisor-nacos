@@ -1,4 +1,6 @@
-# -*- coding=utf-8 -*-
+#!/usr/local/bin/env python3
+# -*-  coding:utf-8 -*-
+
 import base64
 import hashlib
 import logging
@@ -19,7 +21,7 @@ from threading import RLock, Thread
 try:
     # python3.6
     from http import HTTPStatus
-    from urllib.request import Request, urlopen, ProxyHandler, HTTPSHandler, build_opener
+    from urllib.request import Request, urlopen, ProxyHandler, HTTPSHandler, HTTPHandler, build_opener
     from urllib.parse import urlencode, unquote_plus, quote
     from urllib.error import HTTPError, URLError
 except ImportError:
@@ -41,7 +43,7 @@ logging.basicConfig()
 logger = logging.getLogger(__name__)
 
 DEBUG = False
-VERSION = "0.1.7"
+VERSION = "0.1.8"
 
 DEFAULT_GROUP_NAME = "DEFAULT_GROUP"
 DEFAULT_NAMESPACE = ""
@@ -51,7 +53,7 @@ LINE_SEPARATOR = u'\x01'
 
 DEFAULTS = {
     "APP_NAME": "Nacos-SDK-Python",
-    "TIMEOUT": 3,  # in seconds
+    "TIMEOUT": 10,  # in seconds
     "PULLING_TIMEOUT": 30,  # in seconds
     "PULLING_CONFIG_SIZE": 3000,
     "CALLBACK_THREAD_NUM": 10,
@@ -92,6 +94,7 @@ def parse_pulling_result(result):
 
 
 class WatcherWrap:
+
     def __init__(self, key, callback, last_md5=None):
         self.callback = callback
         self.last_md5 = last_md5
@@ -99,6 +102,7 @@ class WatcherWrap:
 
 
 class CacheData:
+
     def __init__(self, key, client):
         self.key = key
         local_value = read_file_str(client.failover_base, key) or read_file_str(client.snapshot_base, key)
@@ -110,6 +114,7 @@ class CacheData:
 
 
 class SubscribedLocalInstance(object):
+
     def __init__(self, key, instance):
         self.key = key
         self.instance_id = instance["instanceId"]
@@ -118,6 +123,7 @@ class SubscribedLocalInstance(object):
 
 
 class SubscribedLocalManager(object):
+
     def __init__(self):
         self.manager = {
             # "key1": {
@@ -517,7 +523,9 @@ class NacosClient:
 
     @synchronized_with_attr("pulling_lock")
     def add_config_watcher(self, data_id, group, cb, content=None):
-        self.add_config_watchers(data_id, group, [cb], content)
+        cache_key = group_key(data_id, group, self.namespace)
+        if not self.watcher_mapping.get(cache_key):
+            self.add_config_watchers(data_id, group, [cb], content)
 
     @synchronized_with_attr("pulling_lock")
     def add_config_watchers(self, data_id, group, cb_list, content=None):
@@ -640,15 +648,15 @@ class NacosClient:
                 # build a new opener that adds proxy setting so that http request go through the proxy
                 if self.proxies:
                     proxy_support = ProxyHandler(self.proxies)
-                    https_support = HTTPSHandler(context=ctx)
-                    opener = build_opener(proxy_support, https_support)
+                    opener = HTTPHandler()
+                    if 'https://' in server_url:
+                        opener = build_opener(proxy_support, HTTPSHandler(context=ctx))
                     resp = opener.open(req, timeout=timeout)
                 else:
-                    # for python version compatibility
-                    if python_version_bellow("2.7.5"):
-                        resp = urlopen(req, timeout=timeout)
-                    else:
+                    if 'https://' in server_url:
                         resp = urlopen(req, timeout=timeout, context=ctx)
+                    else:
+                        resp = urlopen(req, timeout=timeout)
                 logger.debug("[do-sync-req] info from server:%s" % server)
                 return resp
             except HTTPError as e:
@@ -807,9 +815,8 @@ class NacosClient:
             else:
                 params["metadata"] = metadata
 
-
     def add_naming_instance(self, service_name, ip, port, cluster_name=None, weight=1.0, metadata=None,
-                            enable=True, healthy=True, ephemeral=True,group_name=DEFAULT_GROUP_NAME):
+                            enable=True, healthy=True, ephemeral=True, group_name=DEFAULT_GROUP_NAME):
         logger.info("[add-naming-instance] ip:%s, port:%s, service_name:%s, namespace:%s" % (
             ip, port, service_name, self.namespace))
 
@@ -844,7 +851,7 @@ class NacosClient:
             logger.exception("[add-naming-instance] exception %s occur" % str(e))
             raise
 
-    def remove_naming_instance(self, service_name, ip, port, cluster_name=None, ephemeral=True,group_name=DEFAULT_GROUP_NAME):
+    def remove_naming_instance(self, service_name, ip, port, cluster_name=None, ephemeral=True, group_name=DEFAULT_GROUP_NAME):
         logger.info("[remove-naming-instance] ip:%s, port:%s, service_name:%s, namespace:%s" % (
             ip, port, service_name, self.namespace))
 
@@ -878,7 +885,7 @@ class NacosClient:
             raise
 
     def modify_naming_instance(self, service_name, ip, port, cluster_name=None, weight=None, metadata=None,
-                               enable=None, ephemeral=True,group_name=DEFAULT_GROUP_NAME):
+                               enable=None, ephemeral=True, group_name=DEFAULT_GROUP_NAME):
         logger.info("[modify-naming-instance] ip:%s, port:%s, service_name:%s, namespace:%s" % (
             ip, port, service_name, self.namespace))
 
@@ -948,7 +955,7 @@ class NacosClient:
         try:
             resp = self._do_sync_req("/nacos/v1/ns/instance/list", None, params, None, self.default_timeout, "GET")
             c = resp.read()
-            logger.info("[list-naming-instance] service_name:%s, namespace:%s, server response:%s" %
+            logger.info("[list-naming-instance] service_name:%s, namespace:%s, server response:%s" % 
                         (service_name, self.namespace, c))
             return json.loads(c.decode("UTF-8"))
         except HTTPError as e:
@@ -980,7 +987,7 @@ class NacosClient:
         try:
             resp = self._do_sync_req("/nacos/v1/ns/instance", None, params, None, self.default_timeout, "GET")
             c = resp.read()
-            logger.info("[get-naming-instance] ip:%s, port:%s, service_name:%s, namespace:%s, server response:%s" %
+            logger.info("[get-naming-instance] ip:%s, port:%s, service_name:%s, namespace:%s, server response:%s" % 
                         (ip, port, service_name, self.namespace, c))
             return json.loads(c.decode("UTF-8"))
         except HTTPError as e:
@@ -992,7 +999,7 @@ class NacosClient:
             logger.exception("[get-naming-instance] exception %s occur" % str(e))
             raise
 
-    def send_heartbeat(self, service_name, ip, port, cluster_name=None, weight=1.0, metadata=None, ephemeral=True,group_name=DEFAULT_GROUP_NAME):
+    def send_heartbeat(self, service_name, ip, port, cluster_name=None, weight=1.0, metadata=None, ephemeral=True, group_name=DEFAULT_GROUP_NAME):
         logger.info("[send-heartbeat] ip:%s, port:%s, service_name:%s, namespace:%s" % (ip, port, service_name,
                                                                                         self.namespace))
         beat_data = {
@@ -1025,7 +1032,7 @@ class NacosClient:
         try:
             resp = self._do_sync_req("/nacos/v1/ns/instance/beat", None, params, None, self.default_timeout, "PUT")
             c = resp.read()
-            logger.info("[send-heartbeat] ip:%s, port:%s, service_name:%s, namespace:%s, server response:%s" %
+            logger.info("[send-heartbeat] ip:%s, port:%s, service_name:%s, namespace:%s, server response:%s" % 
                         (ip, port, service_name, self.namespace, c))
             return json.loads(c.decode("UTF-8"))
         except HTTPError as e:

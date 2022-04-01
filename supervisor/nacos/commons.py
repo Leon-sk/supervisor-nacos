@@ -1,8 +1,13 @@
+#!/usr/local/bin/env python3
+# -*-  coding:utf-8 -*-
+
 import sys
 
 
 def synchronized_with_attr(attr_name):
+
     def decorator(func):
+
         def synced_func(*args, **kws):
             self = args[0]
             lock = getattr(self, attr_name)

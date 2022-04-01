@@ -1,5 +1,9 @@
+#!/usr/local/bin/env python3
+# -*-  coding:utf-8 -*-
+
 import select
 import errno
+
 
 class BasePoller:
 
@@ -78,6 +82,7 @@ class SelectPoller(BasePoller):
         self.readables = set()
         self.writables = set()
 
+
 class PollPoller(BasePoller):
 
     def initialize(self):
@@ -139,6 +144,7 @@ class PollPoller(BasePoller):
             self.writables.discard(fd)
             return True
         return False
+
 
 class KQueuePoller(BasePoller):
     '''
@@ -219,11 +225,14 @@ class KQueuePoller(BasePoller):
         self._kqueue.close()
         self._kqueue = None
 
+
 def implements_poll():
     return hasattr(select, 'poll')
 
+
 def implements_kqueue():
     return hasattr(select, 'kqueue')
+
 
 if implements_kqueue():
     Poller = KQueuePoller

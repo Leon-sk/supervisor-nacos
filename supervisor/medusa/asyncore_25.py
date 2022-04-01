@@ -1,50 +1,5 @@
-# -*- Mode: Python -*-
-#   Id: asyncore.py,v 2.51 2000/09/07 22:29:26 rushing Exp
-#   Author: Sam Rushing <rushing@nightmare.com>
-
-# ======================================================================
-# Copyright 1996 by Sam Rushing
-#
-#                         All Rights Reserved
-#
-# Permission to use, copy, modify, and distribute this software and
-# its documentation for any purpose and without fee is hereby
-# granted, provided that the above copyright notice appear in all
-# copies and that both that copyright notice and this permission
-# notice appear in supporting documentation, and that the name of Sam
-# Rushing not be used in advertising or publicity pertaining to
-# distribution of the software without specific, written prior
-# permission.
-#
-# SAM RUSHING DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
-# INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN
-# NO EVENT SHALL SAM RUSHING BE LIABLE FOR ANY SPECIAL, INDIRECT OR
-# CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
-# OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT,
-# NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-# CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-# ======================================================================
-
-"""Basic infrastructure for asynchronous socket service clients and servers.
-
-There are only two ways to have a program on a single processor do "more
-than one thing at a time".  Multi-threaded programming is the simplest and
-most popular way to do it, but there is another very different technique,
-that lets you have nearly all the advantages of multi-threading, without
-actually using multiple threads. it's really only practical if your program
-is largely I/O bound. If your program is CPU bound, then preemptive
-scheduled threads are probably what you really need. Network servers are
-rarely CPU-bound, however.
-
-If your operating system supports the select() system call in its I/O
-library (and nearly all do), then you can use it to juggle multiple
-communication channels at once; doing other work while your I/O is taking
-place in the "background."  Although this strategy can seem strange and
-complex, especially at first, it is in many ways easier to understand and
-control than multi-threaded programming. The module documented here solves
-many of the difficult problems for you, making the task of building
-sophisticated high-performance network servers and clients a snap.
-"""
+#!/usr/local/bin/env python3
+# -*-  coding:utf-8 -*-
 
 import select
 import socket
@@ -62,8 +17,10 @@ try:
 except NameError:
     socket_map = {}
 
+
 class ExitNow(Exception):
     pass
+
 
 def read(obj):
     try:
@@ -73,6 +30,7 @@ def read(obj):
     except:
         obj.handle_error()
 
+
 def write(obj):
     try:
         obj.handle_write_event()
@@ -81,6 +39,7 @@ def write(obj):
     except:
         obj.handle_error()
 
+
 def _exception (obj):
     try:
         obj.handle_expt_event()
@@ -88,6 +47,7 @@ def _exception (obj):
         raise
     except:
         obj.handle_error()
+
 
 def readwrite(obj, flags):
     try:
@@ -101,6 +61,7 @@ def readwrite(obj, flags):
         raise
     except:
         obj.handle_error()
+
 
 def poll(timeout=0.0, map=None):
     if map is None:
@@ -145,13 +106,14 @@ def poll(timeout=0.0, map=None):
                 continue
             _exception(obj)
 
+
 def poll2(timeout=0.0, map=None):
     # Use the poll() support added to the select module in Python 2.0
     if map is None:
         map = socket_map
     if timeout is not None:
         # timeout is in milliseconds
-        timeout = int(timeout*1000)
+        timeout = int(timeout * 1000)
     pollster = select.poll()
     if map:
         for fd, obj in map.items():
@@ -177,7 +139,9 @@ def poll2(timeout=0.0, map=None):
                 continue
             readwrite(obj, flags)
 
-poll3 = poll2                           # Alias for backward compatibility
+
+poll3 = poll2  # Alias for backward compatibility
+
 
 def loop(timeout=30.0, use_poll=False, map=None, count=None):
     if map is None:
@@ -196,6 +160,7 @@ def loop(timeout=30.0, use_poll=False, map=None, count=None):
         while map and count > 0:
             poll_fun(timeout, map)
             count -= 1
+
 
 class dispatcher:
 
@@ -227,7 +192,7 @@ class dispatcher:
             self.socket = None
 
     def __repr__(self):
-        status = [self.__class__.__module__+"."+self.__class__.__name__]
+        status = [self.__class__.__module__ + "." + self.__class__.__name__]
         if self.accepting and self.addr:
             status.append('listening')
         elif self.connected:
@@ -240,7 +205,7 @@ class dispatcher:
         return '<%s at %#x>' % (' '.join(status), id(self))
 
     def add_channel(self, map=None):
-        #self.log_info('adding channel %s' % self)
+        # self.log_info('adding channel %s' % self)
         if map is None:
             map = self._map
         map[self._fileno] = self
@@ -250,7 +215,7 @@ class dispatcher:
         if map is None:
             map = self._map
         if fd in map:
-            #self.log_info('closing channel %d:%s' % (fd, self))
+            # self.log_info('closing channel %d:%s' % (fd, self))
             del map[fd]
         self._fileno = None
 
@@ -263,7 +228,7 @@ class dispatcher:
 
     def set_socket(self, sock, map=None):
         self.socket = sock
-##        self.__dict__['socket'] = sock
+# #        self.__dict__['socket'] = sock
         self._fileno = sock.fileno()
         self.add_channel(map)
 
@@ -444,6 +409,7 @@ class dispatcher:
 # [for more sophisticated usage use asynchat.async_chat]
 # ---------------------------------------------------------------------------
 
+
 class dispatcher_with_send(dispatcher):
 
     def __init__(self, sock=None, map=None):
@@ -470,10 +436,11 @@ class dispatcher_with_send(dispatcher):
 # used for debugging.
 # ---------------------------------------------------------------------------
 
+
 def compact_traceback():
     t, v, tb = sys.exc_info()
     tbinfo = []
-    assert tb # Must have a traceback
+    assert tb  # Must have a traceback
     while tb:
         tbinfo.append((
             tb.tb_frame.f_code.co_filename,
@@ -488,6 +455,7 @@ def compact_traceback():
     file, function, line = tbinfo[-1]
     info = ' '.join(['[%s|%s|%s]' % x for x in tbinfo])
     return (file, function, line), t, v, info
+
 
 def close_all(map=None):
     if map is None:
@@ -508,6 +476,7 @@ def close_all(map=None):
 # What other OS's (besides NT) support async file i/o?  [VMS?]
 #
 # Regardless, this is useful for pipes, and stdin/stdout...
+
 
 if os.name == 'posix':
     import fcntl

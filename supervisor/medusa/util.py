@@ -1,4 +1,8 @@
+#!/usr/local/bin/env python3
+# -*-  coding:utf-8 -*-
+
 from supervisor.compat import escape
+
 
 def html_repr (object):
     so = escape (repr (object))
@@ -13,6 +17,7 @@ def html_repr (object):
 # minutes, hours, days
 # p_d (n, (60, 60, 24))
 
+
 def progressive_divide (n, parts):
     result = []
     for part in parts:
@@ -20,6 +25,7 @@ def progressive_divide (n, parts):
         result.append (rem)
     result.append (n)
     return result
+
 
 # b,k,m,g,t
 def split_by_units (n, units, dividers, format_string):
@@ -34,18 +40,20 @@ def split_by_units (n, units, dividers, format_string):
     else:
         return result
 
+
 def english_bytes (n):
     return split_by_units (
             n,
-            ('','K','M','G','T'),
+            ('', 'K', 'M', 'G', 'T'),
             (1024, 1024, 1024, 1024, 1024),
             '%d %sB'
             )
+
 
 def english_time (n):
     return split_by_units (
             n,
             ('secs', 'mins', 'hours', 'days', 'weeks', 'years'),
-            (         60,     60,      24,     7,       52),
+            (60, 60, 24, 7, 52),
             '%d %s'
             )

@@ -1,10 +1,11 @@
-# -*- Mode: Python -*-
+#!/usr/local/bin/env python3
+# -*-  coding:utf-8 -*-
 
 import supervisor.medusa.asynchat_25 as asynchat
 import socket
-import time         # these three are for the rotating logger
-import os           # |
-import stat         # v
+import time  # these three are for the rotating logger
+import os  # |
+import stat  # v
 
 #
 # two types of log:
@@ -26,6 +27,7 @@ import stat         # v
 #  o    low-level file
 #  o    socket channel
 #  o    syslog output...
+
 
 class file_logger:
 
@@ -78,6 +80,7 @@ class file_logger:
 # up the log is done via "mv" because anything else (cp, gzip)
 # would take time, during which medusa would do nothing else.
 
+
 class rotating_file_logger (file_logger):
 
     # If freq is non-None we back up "daily", "weekly", or "monthly".
@@ -98,29 +101,29 @@ class rotating_file_logger (file_logger):
     def next_backup (self, freq):
         (yr, mo, day, hr, min, sec, wd, jday, dst) = time.localtime(time.time())
         if freq == 'daily':
-            return time.mktime((yr,mo,day+1, 0,0,0, 0,0,-1))
+            return time.mktime((yr, mo, day + 1, 0, 0, 0, 0, 0, -1))
         elif freq == 'weekly':
-            return time.mktime((yr,mo,day-wd+7, 0,0,0, 0,0,-1)) # wd(monday)==0
+            return time.mktime((yr, mo, day - wd + 7, 0, 0, 0, 0, 0, -1))  # wd(monday)==0
         elif freq == 'monthly':
-            return time.mktime((yr,mo+1,1, 0,0,0, 0,0,-1))
+            return time.mktime((yr, mo + 1, 1, 0, 0, 0, 0, 0, -1))
         else:
-            return None                  # not a date-based backup
+            return None  # not a date-based backup
 
-    def maybe_flush (self):              # rotate first if necessary
+    def maybe_flush (self):  # rotate first if necessary
         self.maybe_rotate()
-        if self.do_flush:                # from file_logger()
+        if self.do_flush:  # from file_logger()
             self.file.flush()
 
     def maybe_rotate (self):
         if self.freq and time.time() > self.rotate_when:
             self.rotate()
             self.rotate_when = self.next_backup(self.freq)
-        elif self.maxsize:               # rotate when we get too big
+        elif self.maxsize:  # rotate when we get too big
             try:
                 if os.stat(self.filename)[stat.ST_SIZE] > self.maxsize:
                     self.rotate()
-            except os.error:             # file not found, probably
-                self.rotate()            # will create a new file
+            except os.error:  # file not found, probably
+                self.rotate()  # will create a new file
 
     def rotate (self):
         (yr, mo, day, hr, min, sec, wd, jday, dst) = time.localtime(time.time())
@@ -128,9 +131,9 @@ class rotating_file_logger (file_logger):
             self.file.close()
             newname = '%s.ends%04d%02d%02d' % (self.filename, yr, mo, day)
             try:
-                open(newname, "r").close()      # check if file exists
+                open(newname, "r").close()  # check if file exists
                 newname += "-%02d%02d%02d" % (hr, min, sec)
-            except:                             # YEAR_MONTH_DAY is unique
+            except:  # YEAR_MONTH_DAY is unique
                 pass
             os.rename(self.filename, newname)
             self.file = open(self.filename, self.mode)
@@ -138,6 +141,7 @@ class rotating_file_logger (file_logger):
             pass
 
 # log to a stream socket, asynchronously
+
 
 class socket_logger (asynchat.async_chat):
 
@@ -160,8 +164,10 @@ class socket_logger (asynchat.async_chat):
         else:
             self.socket.push (message)
 
+
 # log to multiple places
 class multi_logger:
+
     def __init__ (self, loggers):
         self.loggers = loggers
 
@@ -171,6 +177,7 @@ class multi_logger:
     def log (self, message):
         for logger in self.loggers:
             logger.log (message)
+
 
 class resolving_logger:
     """Feed (ip, message) combinations into this logger to get a
@@ -182,6 +189,7 @@ class resolving_logger:
         self.logger = logger
 
     class logger_thunk:
+
         def __init__ (self, message, logger):
             self.message = message
             self.logger = logger
@@ -200,8 +208,10 @@ class resolving_logger:
                         )
                 )
 
+
 class unresolving_logger:
     """Just in case you don't want to resolve"""
+
     def __init__ (self, logger):
         self.logger = logger
 
@@ -214,8 +224,10 @@ def strip_eol (line):
         line = line[:-1]
     return line
 
+
 class tail_logger:
     """Keep track of the last <size> log messages"""
+
     def __init__ (self, logger, size=500):
         self.size = size
         self.logger = logger
