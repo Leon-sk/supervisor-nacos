@@ -5,10 +5,9 @@ Supervisor is a client/server system that allows its users to
 control a number of processes on UNIX-like operating systems.
 
   
-NACOS配置
-自动注册服务示例  
+NACOS配置自动注册服务示例  
 
-==========
+==============================
   [nacos]  
   
   server_addresses=192.168.1.108:8848, ;nacos server_addresses  
