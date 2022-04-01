@@ -1,12 +1,11 @@
 supervisor-nacos
-==========
+==============================
 
-Supervisor is a client/server system that allows its users to
-control a number of processes on UNIX-like operating systems.
++结合supervis和nacos技术，可自动注册服务、注销服务、保持心跳实现服务的管理，
+可通过配置项实现配置自动监控刷新，并根据配置自动重启服务。
++实现服务自动化监控和控制。
 
-  
-NACOS配置自动注册服务示例  
-
+ Nacos基本配置
 ==============================
   [nacos]  
   
@@ -18,7 +17,8 @@ NACOS配置自动注册服务示例
 
   namespace=3ee2e3c5-43ca-433b-921f-65017248b750 ;nacos namespaceh  
   
-
+自动服务管理、配置刷新
+==============================
   [program:snmp_exporter]  
   
   serverurl = http://127.0.0.1:9117 ;http://ip:port  
