@@ -63,16 +63,6 @@ from supervisor import poller
 from supervisor import nacosd
 
 
-def _read_version_txt():
-    mydir = os.path.abspath(os.path.dirname(__file__))
-    version_txt = os.path.join(mydir, 'version.txt')
-    with open(version_txt, 'r') as f:
-        return f.read().strip()
-
-
-VERSION = _read_version_txt()
-
-
 def normalize_path(v):
     return os.path.normpath(os.path.abspath(os.path.expanduser(v)))
 
