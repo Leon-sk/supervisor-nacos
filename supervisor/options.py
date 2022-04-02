@@ -22,10 +22,7 @@ import fcntl
 from supervisor.compat import PY2
 from supervisor.compat import ConfigParser
 from supervisor.compat import as_bytes, as_string
-try:  # pragma: no cover
-    import xmlrpc.client as xmlrpclib
-except ImportError:  # pragma: no cover
-    import xmlrpclib
+from supervisor.compat import xmlrpclib
 from supervisor.compat import StringIO
 from supervisor.compat import basestring
 
@@ -61,6 +58,16 @@ from supervisor import states
 from supervisor import xmlrpc
 from supervisor import poller
 from supervisor import nacosd
+
+
+def _read_version_txt():
+    mydir = os.path.abspath(os.path.dirname(__file__))
+    version_txt = os.path.join(mydir, 'version.txt')
+    with open(version_txt, 'r') as f:
+        return f.read().strip()
+
+
+VERSION = _read_version_txt()
 
 
 def normalize_path(v):

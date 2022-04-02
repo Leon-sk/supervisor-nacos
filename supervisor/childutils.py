@@ -4,7 +4,7 @@
 import sys
 import time
 
-import xmlrpc.client as xmlrpclib
+from supervisor.compat import xmlrpclib
 from supervisor.compat import long
 from supervisor.compat import as_string
 

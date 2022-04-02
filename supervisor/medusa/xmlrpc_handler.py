@@ -6,10 +6,7 @@ VERSION = "$Id: xmlrpc_handler.py,v 1.6 2004/04/21 14:09:24 akuchling Exp $"
 from supervisor.compat import as_string
 
 import supervisor.medusa.http_server as http_server
-try:
-    import xmlrpclib
-except:
-    import xmlrpc.client as xmlrpclib
+from supervisor.compat import xmlrpclib
 
 import sys
 

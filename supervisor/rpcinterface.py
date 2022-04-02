@@ -24,7 +24,7 @@ from supervisor.options import NotFound
 from supervisor.options import NoPermission
 from supervisor.options import make_namespec
 from supervisor.options import split_namespec
-from supervisor import VERSION
+from supervisor.options import VERSION
 
 from supervisor.events import notify
 from supervisor.events import RemoteCommunicationEvent

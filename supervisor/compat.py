@@ -68,6 +68,11 @@ else:  # pragma: no cover
         return isinstance(stream, _io._TextIOBase)
 
 try:  # pragma: no cover
+    import xmlrpc.client as xmlrpclib
+except ImportError:  # pragma: no cover
+    import xmlrpclib
+
+try:  # pragma: no cover
     import urllib.parse as urlparse
     import urllib.parse as urllib
 except ImportError:  # pragma: no cover

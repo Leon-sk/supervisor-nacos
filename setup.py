@@ -55,11 +55,13 @@ CLASSIFIERS = [
     "Programming Language :: Python :: 3.8",
 ]
 
-from supervisor import VERSION
+version_txt = os.path.join(here, 'supervisor/version.txt')
+with open(version_txt, 'r') as f:
+    supervisor_version = f.read().strip()
 
 dist = setup(
     name='supervisor-nacos',
-    version=VERSION,
+    version=supervisor_version,
     license='BSD-derived (http://www.repoze.org/LICENSE.txt)',
     url='https://github.com/Leon-sk/supervisor-nacos',
     description="A system for controlling process state under UNIX",

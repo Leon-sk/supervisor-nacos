@@ -30,10 +30,7 @@ import socket
 import sys
 import threading
 
-try:  # pragma: no cover
-    import xmlrpc.client as xmlrpclib
-except ImportError:  # pragma: no cover
-    import xmlrpclib
+from supervisor.compat import xmlrpclib
 from supervisor.compat import urlparse
 from supervisor.compat import unicode
 from supervisor.compat import raw_input

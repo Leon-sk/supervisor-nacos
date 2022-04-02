@@ -10,10 +10,7 @@ import traceback
 import types
 from xml.etree.ElementTree import iterparse
 
-try:  # pragma: no cover
-    import xmlrpc.client as xmlrpclib
-except ImportError:  # pragma: no cover
-    import xmlrpclib
+from supervisor.compat import xmlrpclib
 from supervisor.compat import StringIO
 from supervisor.compat import urllib
 from supervisor.compat import as_bytes
