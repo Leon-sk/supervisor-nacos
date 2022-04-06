@@ -117,7 +117,7 @@ class Nacos:
         content = params.get('content')
         
         config = self.get_watcher_config(data_id, group)
-        if config:
+        if config and content:
             with open(config.get('config'), 'w') as f:
                 f.write(content)
             if eval(config.get('flag')) :
