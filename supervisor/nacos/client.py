@@ -237,7 +237,7 @@ class NacosClient:
     def get_md5(content):
         return hashlib.md5(content.encode("UTF-8")).hexdigest() if content is not None else None
 
-    def __init__(self, server_addresses, endpoint=None, namespace=None, ak=None, sk=None, username=None, password=None):
+    def __init__(self, server_addresses, endpoint=None, namespace=None, ak=None, sk=None, username=None, password=None, no_snapshot=False):
         self.server_list = list()
 
         try:
@@ -276,7 +276,7 @@ class NacosClient:
         self.callback_thread_num = DEFAULTS["CALLBACK_THREAD_NUM"]
         self.failover_base = DEFAULTS["FAILOVER_BASE"]
         self.snapshot_base = DEFAULTS["SNAPSHOT_BASE"]
-        self.no_snapshot = False
+        self.no_snapshot = no_snapshot
         self.proxies = None
 
         logger.info("[client-init] endpoint:%s, tenant:%s" % (endpoint, namespace))
@@ -284,7 +284,7 @@ class NacosClient:
     def set_options(self, **kwargs):
         for k, v in kwargs.items():
             if k not in OPTIONS:
-                logger.warning("[set_options] unknown option:%s, ignored" % k)
+                logger.debug("[set_options] unknown option:%s, ignored" % k)
                 continue
 
             logger.debug("[set_options] key:%s, value:%s" % (k, v))
@@ -401,7 +401,7 @@ class NacosClient:
             content = resp.read().decode("UTF-8")
         except HTTPError as e:
             if e.code == HTTPStatus.NOT_FOUND:
-                logger.warning(
+                logger.debug(
                     "[get-config] config not found for data_id:%s, group:%s, namespace:%s, try to delete snapshot" % (
                         data_id, group, self.namespace))
                 delete_file(self.snapshot_base, cache_key)
@@ -442,7 +442,7 @@ class NacosClient:
             data_id, group, self.namespace))
         content = read_file_str(self.snapshot_base, cache_key)
         if content is None:
-            logger.warning("[get-config] snapshot is not exist for %s." % cache_key)
+            logger.debug("[get-config] snapshot is not exist for %s." % cache_key)
         else:
             logger.debug("[get-config] get %s from snapshot directory, content is %s" % (cache_key, truncate(content)))
             return content
@@ -515,7 +515,7 @@ class NacosClient:
         logger.error("[get-configs] get config from server failed, try snapshot, namespace:%s" % self.namespace)
         content = read_file_str(self.snapshot_base, cache_key)
         if content is None:
-            logger.warning("[get-configs] snapshot is not exist for %s." % cache_key)
+            logger.debug("[get-configs] snapshot is not exist for %s." % cache_key)
         else:
             logger.debug("[get-configs] get %s from snapshot directory, content is %s" % (cache_key, truncate(content)))
             return json.loads(content)
@@ -579,12 +579,12 @@ class NacosClient:
             raise NacosException("A callback function is needed.")
         data_id, group = process_common_config_params(data_id, group)
         if not self.puller_mapping:
-            logger.warning("[remove-watcher] watcher is never started.")
+            logger.debug("[remove-watcher] watcher is never started.")
             return
         cache_key = group_key(data_id, group, self.namespace)
         wl = self.watcher_mapping.get(cache_key)
         if not wl:
-            logger.warning("[remove-watcher] there is no watcher on key:%s" % cache_key)
+            logger.debug("[remove-watcher] there is no watcher on key:%s" % cache_key)
             return
 
         wrap_to_remove = list()
@@ -661,20 +661,20 @@ class NacosClient:
             except HTTPError as e:
                 if e.code in [HTTPStatus.INTERNAL_SERVER_ERROR, HTTPStatus.BAD_GATEWAY,
                               HTTPStatus.SERVICE_UNAVAILABLE]:
-                    logger.warning("[do-sync-req] server:%s is not available for reason:%s" % (server, e.msg))
+                    logger.debug("[do-sync-req] server:%s is not available for reason:%s" % (server, e.msg))
                 else:
                     raise
             except socket.timeout:
-                logger.warning("[do-sync-req] %s request timeout" % server)
+                logger.debug("[do-sync-req] %s request timeout" % server)
             except URLError as e:
-                logger.warning("[do-sync-req] %s connection error:%s" % (server, e.reason))
+                logger.debug("[do-sync-req] %s connection error:%s" % (server, e.reason))
 
             tries += 1
             if tries >= len(self.server_list):
                 logger.error("[do-sync-req] %s maybe down, no server is currently available" % server)
                 raise NacosRequestException("All server are not available")
             self.change_server()
-            logger.warning("[do-sync-req] %s maybe down, skip to next" % server)
+            logger.debug("[do-sync-req] %s maybe down, skip to next" % server)
 
     def _do_pulling(self, cache_list, queue):
         cache_pool = dict()
@@ -753,7 +753,7 @@ class NacosClient:
             logger.debug("[process-polling-result] receive an event:%s" % cache_key)
             wl = self.watcher_mapping.get(cache_key)
             if not wl:
-                logger.warning("[process-polling-result] no watcher on %s, ignored" % cache_key)
+                logger.debug("[process-polling-result] no watcher on %s, ignored" % cache_key)
                 continue
 
             data_id, group, namespace = parse_key(cache_key)

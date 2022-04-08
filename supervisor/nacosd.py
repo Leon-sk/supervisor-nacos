@@ -77,23 +77,25 @@ class Nacos:
                     continue
                 for info in allProcessInfo:
                     nacosconfig = info['nacosconfig']
-                    config, flag = nacosconfig.strip().split(':')
-                    filepath, filename = os.path.split(config)
-                    os.makedirs(filepath, exist_ok=True)
-                    ip, port = info['serverurl'].strip('http://').split(':')
-                    data_id = '{0}:{1}:{2}:{3}'.format(info['name'], ip, port, filename)
-                    group = info['nacosgroup']
-                    app_name = info['name']
-                    
-                    content = self.nacosclient.get_config(data_id, group)
-                    if not content:
-                        with open(config, 'r') as f:
-                            content = f.read()
-                        self.nacosclient.publish_config(data_id, group, content, app_name=app_name)
-                    else:
-                        self.nacosclient.add_config_watcher(data_id, group, self.watcher_callback)
-                    
-                    self.save_watcher_config(data_id, group, config, flag, info['name'])
+                    for tmp in nacosconfig.strip().split(','):
+                        config, flag = tmp.strip().split(':')
+                        filepath, filename = os.path.split(config)
+                        os.makedirs(filepath, exist_ok=True)
+                        ip, port = info['serverurl'].strip('http://').split(':')
+                        data_id = '{0}:{1}:{2}:{3}'.format(info['name'], ip, port, filename)
+                        group = info['nacosgroup']
+                        app_name = info['name']
+                        
+                        content = self.nacosclient.get_config(data_id, group)
+                        if not content:
+                            if os.path.exists(config):
+                                with open(config, 'r') as f:
+                                    content = f.read()
+                                self.nacosclient.publish_config(data_id, group, content, app_name=app_name)
+                        else:
+                            self.nacosclient.add_config_watcher(data_id, group, self.watcher_callback)
+                        
+                        self.save_watcher_config(data_id, group, config, flag, info['name'])
                     
             except Exception as ex:
                 logger.error('error:{0}'.format(ex))

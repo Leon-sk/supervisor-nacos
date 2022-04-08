@@ -61,7 +61,7 @@ def delete_file(base, key):
     try:
         os.remove(file_path)
     except OSError:
-        logger.warning("[delete-file] file not exists, file path:%s" % file_path)
+        logger.debug("[delete-file] file not exists, file path:%s" % file_path)
 
 
 def lock_file(f):
