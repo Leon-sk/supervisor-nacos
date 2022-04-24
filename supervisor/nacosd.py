@@ -44,12 +44,11 @@ class Nacos:
             try:
                 allProcessInfo = self.getAllProcessInfo()
                 if not allProcessInfo:
-                    time.sleep(5)
                     continue
                 for info in allProcessInfo:
                     state = info['state']
                     ip, port = info['serverurl'].strip('http://').split(':')
-                    metadata = self.nacos_config['metadata']
+                    metadata = self.nacos_config.get('metadata')
                     if state == ProcessStates.RUNNING:
                         self.nacosclient.add_naming_instance(
                             info['name'], ip, port, group_name=info['nacosgroup'], metadata=metadata)
@@ -58,6 +57,7 @@ class Nacos:
                     else:
                         self.nacosclient.remove_naming_instance(
                             info['name'], ip, port, group_name=info['nacosgroup'])
+                time.sleep(15)
             except Exception as ex:
                 logger.error('error:{0}'.format(ex))
                 logger.error(traceback.format_exc())
@@ -73,7 +73,6 @@ class Nacos:
             try:
                 allProcessInfo = self.getAllProcessInfo()
                 if not allProcessInfo:
-                    time.sleep(5)
                     continue
                 for info in allProcessInfo:
                     nacosconfig = info['nacosconfig']
@@ -96,7 +95,7 @@ class Nacos:
                             self.nacosclient.add_config_watcher(data_id, group, self.watcher_callback)
                         
                         self.save_watcher_config(data_id, group, config, flag, info['name'])
-                    
+                time.sleep(15)
             except Exception as ex:
                 logger.error('error:{0}'.format(ex))
                 logger.error(traceback.format_exc())
